@@ -1,6 +1,5 @@
 package com.bsds.server.servlets;
 
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -8,11 +7,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.bsds.server.model.Resort;
+import com.bsds.server.model.ResponseMessage;
+import com.bsds.server.model.Season;
+
+import java.util.List;
 
 import com.google.gson.Gson;
 
@@ -40,8 +44,12 @@ public class ResortServlet {
         res.setStatus(HttpStatus.OK.value());
         
         // append dummy data to response body 
-        String dummyResort = gson.toJson(new Resort(1, "dummy resort"));
-        res.getWriter().append(dummyResort);
+        List<Resort> resorts = new ArrayList<>();
+        resorts.add(new Resort("dummy resort 1", 1));
+        resorts.add(new Resort("dummy resort 2", 2));
+
+        String dummyResortList = gson.toJson(resorts);
+        res.getWriter().append(dummyResortList);
     }
 
     /**
@@ -60,26 +68,38 @@ public class ResortServlet {
         // mock for id validation
         boolean invalidID = false;
         if (invalidID) {
-            res.sendError(400, "invalid resort ID!");
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+
+            // append error message to response
+            ResponseMessage responseMessage = new ResponseMessage("invalid resort ID!");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
             return;
         }
 
         // mock for resort lookup
         boolean foundResort = true;
         if (!foundResort) {
-            res.setStatus(404);
-            res.sendError(404, "resort not found!");
+            res.setStatus(HttpStatus.NOT_FOUND.value());
+
+            // append error message to response
+            ResponseMessage responseMessage = new ResponseMessage("resort not found!");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
             return;
         }
 
-        // set response status code to SC_OK
+        // set response status code to OK
         res.setStatus(HttpStatus.OK.value());
 
-        // mirror request type in response 
-        res.getWriter().append("Request type: " + HttpMethod.GET + "\n");
-
         // append resort ID to response body 
-        res.getWriter().append("resort ID: " + resortID);
+
+        List<Season> seasons = new ArrayList<>();
+        seasons.add(new Season("season 1"));
+        seasons.add(new Season("season 2"));
+
+        String dummySeasonsList = gson.toJson(seasons);
+        res.getWriter().append(dummySeasonsList);
     }
 
     /**
@@ -94,23 +114,36 @@ public class ResortServlet {
         
         // TODO: validate request body 
 
+        boolean invalidInputs = false;
+        if (invalidInputs) {
+            // set media type
+            res.setContentType("application/json");
+
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+
+            // append error message to response
+            ResponseMessage responseMessage = new ResponseMessage("invalid inputs!");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
+            return;
+        }
+
         boolean foundResort = true;
         if (!foundResort) {
             // set media type
             res.setContentType("application/json");
 
-            res.sendError(404, "resort not found!");
+            res.setStatus(HttpStatus.NOT_FOUND.value());
+
+            // append error message to response
+            ResponseMessage responseMessage = new ResponseMessage("resort not found!");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
             return;
         }
         
-        // set response status code to SC_OK
+        // set response status code to CREATED
         res.setStatus(HttpStatus.CREATED.value());
-
-        // mirror request type in response 
-        res.getWriter().append("Request type: " + HttpMethod.POST + "\n");
-
-        // append resort ID to response body 
-        res.getWriter().append("resort ID: " + resortID);
     }
 
 }

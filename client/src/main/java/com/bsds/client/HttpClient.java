@@ -6,10 +6,10 @@ import org.json.JSONObject;
 import org.springframework.web.bind.annotation.PostMapping;
 
 
-public class ApiClient {
+public class HttpClient {
     public final OkHttpClient httpClient;
 
-    public ApiClient() {
+    public HttpClient() {
         this.httpClient = new OkHttpClient();
     }
 
@@ -18,7 +18,7 @@ public class ApiClient {
     public void postWriteLifeRide(int resortID, int seasonID, int dayID, int skierID) throws Exception {
 //        String tempFullPath = "/{{resortID}}/seasons/{{seasonID}}/days/{{dayID}}/skiers/{{skierID}}";
 
-        String postURL = "http://localhost:8080/skiers";
+        String postURL = "http://localhost:8080/skiers/" + resortID + "/seasons/" + seasonID + "/days/" + dayID + "/skiers/" + skierID;
 
         MediaType JSON = MediaType.parse("application/json");
         JSONObject postData = new JSONObject();
@@ -35,6 +35,7 @@ public class ApiClient {
                 .build();
 
         Response response = httpClient.newCall(postRequest).execute();
+        System.out.println(response);
 
     }
 

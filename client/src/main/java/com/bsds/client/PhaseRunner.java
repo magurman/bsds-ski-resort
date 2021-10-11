@@ -14,10 +14,11 @@ public class PhaseRunner extends Thread  {
   private int startTime;
   private int endTime;
   private CyclicBarrier barrier;
+  private int numRuns;
 
 
   public PhaseRunner(int numThreads, int skierIDStart, int skierIDEnd, int numSkiLifts,
-      String hostname, int port, int startTime, int endTime, CyclicBarrier barrier) {
+      String hostname, int port, int startTime, int endTime, int numRuns, CyclicBarrier barrier) {
     this.numThreads = numThreads;
     this.skierIDStart = skierIDStart;
     this.skierIDEnd = skierIDEnd;
@@ -27,6 +28,7 @@ public class PhaseRunner extends Thread  {
     this.startTime = startTime;
     this.endTime = endTime;
     this.barrier = barrier;
+    this.numRuns = numRuns;
   }
 
   @Override
@@ -39,8 +41,9 @@ public class PhaseRunner extends Thread  {
       System.out.println("Launching thread with following starting and ending Skier IDs");
       System.out.println(String.format("Start ID: %d", threadIDStart));
       System.out.println(String.format("End ID: %d", threadIDEnd));
+      System.out.println(i);
       new SkierThread(hostname, port, threadIDStart, threadIDEnd, startTime, endTime,
-          123409123, barrier).start();
+          numSkiLifts, numRuns, barrier).start();
     }
   }
 

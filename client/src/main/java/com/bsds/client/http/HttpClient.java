@@ -11,16 +11,21 @@ import com.google.gson.Gson;
  * HttpClient for 
  */
 public class HttpClient {
-    public final OkHttpClient httpClient;
+
+    private static OkHttpClient httpClientInstance;
 
     // gson converts pojo to json string
-    private Gson gson = new Gson();
+    private static Gson gson = new Gson();
 
-    public HttpClient() {
-        this.httpClient = new OkHttpClient();
+
+    public static OkHttpClient getInstance(){
+        if( httpClientInstance == null){
+            httpClientInstance = new OkHttpClient();
+        }
+        return httpClientInstance;
     }
 
-    public void postWriteLifeRide(String url, int time, int liftID) throws Exception {
+    public static void postWriteLifeRide(String url, int time, int liftID) throws Exception {
 
         MediaType JSON = MediaType.parse("application/json");
         LiftRide liftRide = new LiftRide(time, liftID);
@@ -31,12 +36,8 @@ public class HttpClient {
                 .post(body)
                 .build();
 
-        Response response = httpClient.newCall(postRequest).execute();
+        Response response = HttpClient.getInstance().newCall(postRequest).execute();
         System.out.println("RESPONSE: " + response);
-    }
-
-    public OkHttpClient getClient() {
-        return this.httpClient;
     }
 
 }

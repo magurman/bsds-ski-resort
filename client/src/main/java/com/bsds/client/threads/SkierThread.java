@@ -8,6 +8,7 @@ import com.bsds.client.http.HttpClient;
 
 public class SkierThread extends Thread {
 
+
     private final String hostname;
     private final int port;
     private final int startSkierID;
@@ -48,10 +49,12 @@ public class SkierThread extends Thread {
             int currentSkierID = getRandomSkierID(skierIDs);
             skierIDs.remove(skierIDs.indexOf(currentSkierID));
             try {
+
                 String url = "http://" + this.hostname + ":" + this.port + "/server-0.0.1-SNAPSHOT/skiers/" + 10 + "/seasons/" + 10 + "/days/" + 11 + "/skiers/" + 12;
                 int time = 10; // dummy data
                 int liftID = 11; // dummy data
                 this.client.postWriteLifeRide(url, time, liftID); // Make POST request
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -2,7 +2,6 @@ package com.bsds.client;
 
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
-import org.springframework.context.Phased;
 
 public class PhasedSkiersClient {
   private int numThreads;

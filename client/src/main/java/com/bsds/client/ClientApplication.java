@@ -1,10 +1,5 @@
 package com.bsds.client;
 
-import java.util.concurrent.CyclicBarrier;
-
-
-import com.bsds.client.threads.SkierThread;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
@@ -14,8 +9,7 @@ import org.springframework.core.env.Environment;
 @SpringBootApplication
 public class ClientApplication extends SpringBootServletInitializer {
 
-	public static void main(String[] args) {
-
+	public static void main(String[] args) throws InterruptedException {
 
 		ConfigurableApplicationContext ctx = 
            SpringApplication.run(ClientApplication.class, args);
@@ -33,9 +27,14 @@ public class ClientApplication extends SpringBootServletInitializer {
 		int numSkiers = Integer.parseInt(env.getProperty("client.numSkiers"));
 		int numThreads = Integer.parseInt(env.getProperty("client.numThreads"));
 
-		SkierThread skierThread = new SkierThread(domain, port, 0, 100, 1, 1, (float) .1, new CyclicBarrier(10));
+		PhasedSkiersClient client = new PhasedSkiersClient(numThreads, 1,
+				numSkiers, numLifts, numRuns, domain, port);
 
-		skierThread.run();
+		try {
+			client.start();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-
 }

@@ -15,9 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bsds.server.model.ResponseMessage;
 import com.bsds.server.model.SkierVertical;
+import com.bsds.server.model.LiftRide;
+
 import com.google.gson.Gson;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class SkierServlet {
@@ -40,7 +43,23 @@ public class SkierServlet {
     public void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                      HttpServletRequest req, HttpServletResponse res) throws IOException {
 
-        // TODO: validate request body
+        try {
+            String reqBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            LiftRide liftRide = gson.fromJson(reqBody, LiftRide.class);
+        } catch (Exception e) {
+            // set media type
+            res.setContentType("application/json");
+
+            // set status code
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+
+            // append error message to response
+            ResponseMessage responseMessage = new ResponseMessage("invalid request body! Req body must be LiftRide json object!");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
+            return;
+        }
+
 
         // validate dayID parameter
         if (!validateDayID(dayID)) {

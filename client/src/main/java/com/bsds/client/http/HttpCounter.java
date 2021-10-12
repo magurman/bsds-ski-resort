@@ -7,7 +7,7 @@ public class HttpCounter {
     private int succRequests;
     private int failedRequests;
 
-    public HttpCounter() {
+    private HttpCounter() {
         this.succRequests = 0;
         this.failedRequests = 0;
     }

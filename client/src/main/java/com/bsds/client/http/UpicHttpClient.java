@@ -4,8 +4,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
+import java.util.Arrays;
+import java.util.List;
 
-import javax.swing.text.StyledEditorKit;
+import org.springframework.http.HttpStatus;
 
 import java.net.http.HttpRequest;
 
@@ -43,21 +45,25 @@ public class UpicHttpClient {
 
         HttpResponse<String> response = UpicHttpClient.getInstance().send(postRequest, HttpResponse.BodyHandlers.ofString());
 
-        switch (response.statusCode()) {
-            case 400:
-                HttpCounter.getInstance().failed();
-                logger.error("400 Bad Request. Moving to next request.");
-            case 404:
-                HttpCounter.getInstance().failed();
-                logger.error("404 Not Found. Moving to next request.");
-            case 500:
-                HttpCounter.getInstance().failed();
-                logger.error("500 Internal Server Error. Moving to next request.");
-            case 201:
-                HttpCounter.getInstance().succ();
-                logger.info("Success.");
-            default:
-                // do nothing
+        List<HttpStatus> values = Arrays.asList(HttpStatus.values());
+
+        int responseCode = response.statusCode();
+
+        for (HttpStatus status : values) {
+            if (responseCode == status.value()) {
+
+                HttpStatus.Series httpStatusSeries = status.series();
+
+                if (httpStatusSeries.equals(HttpStatus.Series.SUCCESSFUL)) {
+                    HttpCounter.getInstance().succ();
+                } else if (httpStatusSeries.equals(HttpStatus.Series.CLIENT_ERROR)) {
+                    HttpCounter.getInstance().failed();
+                    logger.error("4xx client error. Moving to next request.");
+                } else if (httpStatusSeries.equals(HttpStatus.Series.SERVER_ERROR)) {
+                    HttpCounter.getInstance().failed();
+                    logger.error("5xx server error. Moving to next request.");
+                }
+            }
         }
     }
 

@@ -1,14 +1,12 @@
 package com.bsds.client.http;
 
-
-import okhttp3.*;
-//import org.json.JSONObject;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
-import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
+
+import javax.swing.text.StyledEditorKit;
+
 import java.net.http.HttpRequest;
 
 import org.apache.logging.log4j.Logger;
@@ -38,20 +36,29 @@ public class UpicHttpClient {
 
     public static void postWriteLifeRide(String url, int time, int liftID) throws Exception {
 
-        MediaType JSON = MediaType.parse("application/json");
         LiftRide liftRide = new LiftRide(time, liftID);
-        //RequestBody body = RequestBody.create(gson.toJson(liftRide), JSON);
         String body = gson.toJson(liftRide);
 
-        BodyPublisher bodyPublisher;
         HttpRequest postRequest = HttpRequest.newBuilder().uri(URI.create(url)).POST(BodyPublishers.ofString(body)).build();
 
-        // Response response = BSDSHttpClient.getInstance().newCall(postRequest).execute();
         HttpResponse<String> response = UpicHttpClient.getInstance().send(postRequest, HttpResponse.BodyHandlers.ofString());
-     
-        logger.info("RESPONSE STATUS CODE: " + response.statusCode());
 
-        //System.out.println("RESPONSE: " + response);
+        switch (response.statusCode()) {
+            case 400:
+                HttpCounter.getInstance().failed();
+                logger.error("400 Bad Request. Moving to next request.");
+            case 404:
+                HttpCounter.getInstance().failed();
+                logger.error("404 Not Found. Moving to next request.");
+            case 500:
+                HttpCounter.getInstance().failed();
+                logger.error("500 Internal Server Error. Moving to next request.");
+            case 201:
+                HttpCounter.getInstance().succ();
+                logger.info("Success.");
+            default:
+                // do nothing
+        }
     }
 
 }

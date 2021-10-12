@@ -1,5 +1,7 @@
 package com.bsds.client;
 
+import com.bsds.client.http.HttpCounter;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -29,11 +31,17 @@ public class ClientApplication {
 		PhasedSkiersClient client = new PhasedSkiersClient(numThreads, 1,
 				numSkiers, numLifts, numRuns, domain, port);
 
+		long begTimeStamp = System.currentTimeMillis();
 		try {
 			client.start();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		long endTimeStamp = System.currentTimeMillis();
+		
+		System.out.println("Wall time: " + (float) (endTimeStamp - begTimeStamp) / 1000 + " seconds");
+		System.out.println("Num Succ Requests: " + HttpCounter.getInstance().getSucc());
+		System.out.println("Num Failed Requests: " + HttpCounter.getInstance().getFailed());
 	}
 }

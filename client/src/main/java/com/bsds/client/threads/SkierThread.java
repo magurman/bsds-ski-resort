@@ -1,11 +1,9 @@
 package com.bsds.client.threads;
 
-import java.util.ArrayList;
-import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
-import com.bsds.client.http.HttpClient;
+import com.bsds.client.http.UpicHttpClient;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class SkierThread extends Thread {
@@ -48,7 +46,7 @@ public class SkierThread extends Thread {
                     endTime + 1);
                 int randomLift = ThreadLocalRandom.current().nextInt(1,
                     numSkiLifts + 1);
-                HttpClient.postWriteLifeRide(url, randomTime, randomLift); // Make POST request
+                UpicHttpClient.postWriteLifeRide(url, randomTime, randomLift); // Make POST request
             } catch (Exception e) {
                 e.printStackTrace();
             }

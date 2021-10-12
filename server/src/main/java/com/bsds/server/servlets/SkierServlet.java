@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,10 +41,10 @@ public class SkierServlet {
     @PostMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")
     public void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                      HttpServletRequest req, HttpServletResponse res) throws IOException {
-
+        LiftRide liftRide;
         try {
             String reqBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-            LiftRide liftRide = gson.fromJson(reqBody, LiftRide.class);
+            liftRide = gson.fromJson(reqBody, LiftRide.class);
         } catch (Exception e) {
             // set media type
             res.setContentType("application/json");
@@ -95,8 +94,8 @@ public class SkierServlet {
         // set response status code to CREATED
         res.setStatus(HttpStatus.CREATED.value());
 
-        // mirror request type in response 
-        res.getWriter().append("Request type: " + HttpMethod.POST + "\n");
+        // send liftRide back in response
+        res.getWriter().append(gson.toJson(liftRide));
     }
 
     @GetMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")

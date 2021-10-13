@@ -55,12 +55,12 @@ public class UpicHttpClient {
                 HttpStatus.Series httpStatusSeries = status.series();
 
                 if (httpStatusSeries.equals(HttpStatus.Series.SUCCESSFUL)) {
-                    HttpCounter.getInstance().succ();
+                    HttpCounter.incrementNumSuccessful();;
                 } else if (httpStatusSeries.equals(HttpStatus.Series.CLIENT_ERROR)) {
-                    HttpCounter.getInstance().failed();
+                    HttpCounter.incrementNumFailed();
                     logger.error("4xx client error. Moving to next request.");
                 } else if (httpStatusSeries.equals(HttpStatus.Series.SERVER_ERROR)) {
-                    HttpCounter.getInstance().failed();
+                    HttpCounter.incrementNumFailed();
                     logger.error("5xx server error. Moving to next request.");
                 }
             }

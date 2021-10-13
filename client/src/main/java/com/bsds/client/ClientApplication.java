@@ -77,7 +77,7 @@ public class ClientApplication {
 		long endTimeStamp = System.currentTimeMillis();
 
 		System.out.println("Wall time: " + (float) (endTimeStamp - begTimeStamp) / 1000 + " seconds");
-		System.out.println("Num Succ Requests: " + HttpCounter.getInstance().getSucc());
-		System.out.println("Num Failed Requests: " + HttpCounter.getInstance().getFailed());
+		System.out.println("Num Succ Requests: " + HttpCounter.getNumSuccessful());
+		System.out.println("Num Failed Requests: " + HttpCounter.getNumFailed());
 	}
 }

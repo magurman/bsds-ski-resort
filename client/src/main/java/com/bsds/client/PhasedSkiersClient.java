@@ -38,12 +38,8 @@ public class PhasedSkiersClient {
     phaseOne.start();
 
     while(phaseOneBarrier.getNumberWaiting() < Math.round((float) (numThreads/4)*.1)){
-
     }
 
-    System.out.println("10 percent of Phase One complete! Launching Phase Two!");
-    System.out.println(String.format("Current number of threads completed: %d",
-        phaseOneBarrier.getNumberWaiting()));
 
     int phaseTwoNumRuns = (int) Math.round(0.8 * numRuns);
     PhaseRunner phaseTwo = new PhaseRunner(numThreads, skierIDStart, skierIDEnd, numSkiLifts,
@@ -53,10 +49,6 @@ public class PhasedSkiersClient {
     while(phaseTwoBarrier.getNumberWaiting() < Math.round(numThreads *.1)){
     }
 
-    System.out.println("10 percent of Phase Two complete! Launching Phase Three!");
-    System.out.println(String.format("Current number of threads completed: %d",
-        phaseTwoBarrier.getNumberWaiting()));
-
     int phaseThreeNumRuns = (int) Math.round(0.1 * numRuns);
     PhaseRunner phaseThree = new PhaseRunner(numThreads/4, skierIDStart, skierIDEnd,
         numSkiLifts, hostname, port, 361, 420, phaseThreeNumRuns,
@@ -65,21 +57,18 @@ public class PhasedSkiersClient {
 
     try {
       phaseOneBarrier.await();
-      System.out.println("Phase One successfully completed!");
     } catch (BrokenBarrierException e) {
       e.printStackTrace();
     }
 
     try {
       phaseTwoBarrier.await();
-      System.out.println("Phase Two successfully completed!");
     } catch (BrokenBarrierException e) {
       e.printStackTrace();
     }
 
     try {
       phaseThreeBarrier.await();
-      System.out.println("Phase Three successfully completed!");
     } catch (BrokenBarrierException e) {
       e.printStackTrace();
     }

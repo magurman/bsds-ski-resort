@@ -1,6 +1,6 @@
-2021-10-13T00:42:26,591 [main] com.bsds.client.ClientApplication logStarting - INFO: Starting ClientApplication using Java 14.0.1 on Vaughns-MacBook-Pro.local with PID 38826 (/Users/vaughnfranz/Northeastern/Building Scalable Distributed Systems - CS 6650/bsds-ski-resort/client/target/classes started by vaughnfranz in /Users/vaughnfranz/Northeastern/Building Scalable Distributed Systems - CS 6650/bsds-ski-resort/client)
-2021-10-13T00:42:26,608 [main] com.bsds.client.ClientApplication logStartupProfileInfo - INFO: No active profile set, falling back to default profiles: default
-2021-10-13T00:42:27,444 [main] org.springframework.boot.web.embedded.tomcat.TomcatWebServer initialize - INFO: Tomcat initialized with port(s): 9000 (http)
-2021-10-13T00:42:27,527 [main] org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext prepareWebApplicationContext - INFO: Root WebApplicationContext: initialization completed in 868 ms
-2021-10-13T00:42:27,881 [main] org.springframework.boot.web.embedded.tomcat.TomcatWebServer start - INFO: Tomcat started on port(s): 9000 (http) with context path ''
-2021-10-13T00:42:27,891 [main] com.bsds.client.ClientApplication logStarted - INFO: Started ClientApplication in 1.633 seconds (JVM running for 7.3)
+2021-10-13T00:58:22,508 [main] com.bsds.client.ClientApplication logStarting - INFO: Starting ClientApplication using Java 14.0.1 on Vaughns-MacBook-Pro.local with PID 39585 (/Users/vaughnfranz/Northeastern/Building Scalable Distributed Systems - CS 6650/bsds-ski-resort/client/target/classes started by vaughnfranz in /Users/vaughnfranz/Northeastern/Building Scalable Distributed Systems - CS 6650/bsds-ski-resort/client)
+2021-10-13T00:58:22,520 [main] com.bsds.client.ClientApplication logStartupProfileInfo - INFO: No active profile set, falling back to default profiles: default
+2021-10-13T00:58:23,368 [main] org.springframework.boot.web.embedded.tomcat.TomcatWebServer initialize - INFO: Tomcat initialized with port(s): 9000 (http)
+2021-10-13T00:58:23,438 [main] org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext prepareWebApplicationContext - INFO: Root WebApplicationContext: initialization completed in 867 ms
+2021-10-13T00:58:23,757 [main] org.springframework.boot.web.embedded.tomcat.TomcatWebServer start - INFO: Tomcat started on port(s): 9000 (http) with context path ''
+2021-10-13T00:58:23,764 [main] com.bsds.client.ClientApplication logStarted - INFO: Started ClientApplication in 1.649 seconds (JVM running for 7.353)

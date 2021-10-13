@@ -28,7 +28,6 @@ public class SkierThread extends Thread {
         this.numSkiLifts = numSkiLifts;
         this.numSkiers = endSkierID - startSkierID + 1;
         this.numRunsForPhase = numRuns * numSkiers;
-        System.out.println(numRunsForPhase);
     }
 
     @Override

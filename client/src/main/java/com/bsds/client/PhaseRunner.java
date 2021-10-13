@@ -3,6 +3,9 @@ package com.bsds.client;
 import com.bsds.client.threads.SkierThread;
 import java.util.concurrent.CyclicBarrier;
 
+/**
+ * A class to execute a phase in PhasedSkiersClient
+ */
 public class PhaseRunner extends Thread  {
 
   private int numThreads;
@@ -14,7 +17,6 @@ public class PhaseRunner extends Thread  {
   private CyclicBarrier barrier;
   private int numRuns;
   private int numSkiers;
-
 
   public PhaseRunner(int numThreads, int skierIDStart, int skierIDEnd, int numSkiLifts,
       String hostname, int port, int startTime, int endTime, int numRuns, CyclicBarrier barrier) {
@@ -29,6 +31,12 @@ public class PhaseRunner extends Thread  {
     this.numSkiers = skierIDEnd - skierIDStart + 1;
   }
 
+  /**
+   * Run this phase. 
+   * 
+   * Creates numThreads SkierThreads to execute Post requests, divides the
+   * range of skiers evenly among the threads that it launches 
+   */
   @Override
   public void run() {
     for (int i = 0; i < numThreads; i++) {

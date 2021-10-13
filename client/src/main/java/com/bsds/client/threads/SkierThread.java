@@ -8,7 +8,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class SkierThread extends Thread {
 
-
     private final String hostname;
     private final int port;
     private int startTime;

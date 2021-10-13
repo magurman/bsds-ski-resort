@@ -1,5 +1,6 @@
 package com.bsds.client.http;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
@@ -18,7 +19,7 @@ import com.bsds.client.model.LiftRide;
 import com.google.gson.Gson;
 
 /**
- * HttpClient for 
+ * HttpClient for Upic Ski Resort 
  */
 public class UpicHttpClient {
 
@@ -29,6 +30,7 @@ public class UpicHttpClient {
     // gson converts pojo to json string
     private static Gson gson = new Gson();
 
+    // HttpClient uses a Singleton pattern
     public static HttpClient getInstance() {
         if (httpClientInstance == null) {
             httpClientInstance = HttpClient.newBuilder().build();
@@ -36,19 +38,27 @@ public class UpicHttpClient {
         return httpClientInstance;
     }
 
-    public static void postWriteLifeRide(String url, int time, int liftID) throws Exception {
+    /**
+     * Post a lift ride to the Upic Ski Resort server
+     * @param url - url to send the POST request to
+     * @param time - time of lift ride 
+     * @param liftID - lift id of the lift taken
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    public static void postWriteLifeRide(String url, int time, int liftID) throws IOException, InterruptedException  {
 
+        // create lift ride POJO and convert to JSON string 
         LiftRide liftRide = new LiftRide(time, liftID);
         String body = gson.toJson(liftRide);
 
+        // construct request, send it and get response code 
         HttpRequest postRequest = HttpRequest.newBuilder().uri(URI.create(url)).POST(BodyPublishers.ofString(body)).build();
-
         HttpResponse<String> response = UpicHttpClient.getInstance().send(postRequest, HttpResponse.BodyHandlers.ofString());
-
-        List<HttpStatus> values = Arrays.asList(HttpStatus.values());
-
         int responseCode = response.statusCode();
 
+        // check response code and log any 4xx or 5xx errors
+        List<HttpStatus> values = Arrays.asList(HttpStatus.values());
         for (HttpStatus status : values) {
             if (responseCode == status.value()) {
 

@@ -3,6 +3,11 @@ package com.bsds.client;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
+/**
+ * A class to manage multiple phases of sending client requests to the Upic Ski Resort Server.
+ * 
+ * This class currently launches three phases of sending requests to the server: startup, peak, and cooldown
+ */
 public class PhasedSkiersClient {
   private int numThreads;
   private int skierIDStart;
@@ -31,24 +36,28 @@ public class PhasedSkiersClient {
 
   public void start() throws InterruptedException {
 
+    // launch phase one - startup
     int phaseOneNumRuns = (int) Math.round(0.1 * numRuns);
     PhaseRunner phaseOne = new PhaseRunner(numThreads/4, skierIDStart, skierIDEnd,
         numSkiLifts, hostname, port, 1, 90, phaseOneNumRuns,
         PhasedSkiersClient.phaseOneBarrier);
     phaseOne.start();
 
+    // wait for phase one to be 10% complete before continuing
     while(phaseOneBarrier.getNumberWaiting() < Math.round((float) (numThreads/4)*.1)){
     }
 
-
+    // launch phase 2 - peak
     int phaseTwoNumRuns = (int) Math.round(0.8 * numRuns);
     PhaseRunner phaseTwo = new PhaseRunner(numThreads, skierIDStart, skierIDEnd, numSkiLifts,
         hostname, port, 91, 360, phaseTwoNumRuns, phaseTwoBarrier);
     phaseTwo.start();
 
+    // wait for phase two to be 10% complete before continuing 
     while(phaseTwoBarrier.getNumberWaiting() < Math.round(numThreads *.1)){
     }
 
+    // launch phase 3
     int phaseThreeNumRuns = (int) Math.round(0.1 * numRuns);
     PhaseRunner phaseThree = new PhaseRunner(numThreads/4, skierIDStart, skierIDEnd,
         numSkiLifts, hostname, port, 361, 420, phaseThreeNumRuns,

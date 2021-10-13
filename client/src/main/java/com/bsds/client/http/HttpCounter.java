@@ -1,37 +1,27 @@
 package com.bsds.client.http;
 
 public class HttpCounter {
+    private static int succRequests = 0;
+    private static int failedRequests = 0;
 
-    public static HttpCounter httpCounterInstance;
-
-    private int succRequests;
-    private int failedRequests;
-
-    private HttpCounter() {
-        this.succRequests = 0;
-        this.failedRequests = 0;
+    public static synchronized void incrementNumSuccessful() {
+        HttpCounter.succRequests++;
     }
 
-    public synchronized void succ() {
-        this.succRequests++;
+    public static synchronized void incrementNumFailed() {
+        HttpCounter.failedRequests++;
     }
 
-    public synchronized void failed() {
-        this.failedRequests++;
+    public static synchronized int getNumSuccessful() {
+        return HttpCounter.succRequests;
     }
 
-    public int getSucc() {
-        return this.succRequests;
+    public static synchronized int getNumFailed() {
+        return HttpCounter.failedRequests;
     }
 
-    public int getFailed() {
-        return this.failedRequests;
-    }
-
-    public static HttpCounter getInstance() {
-        if (httpCounterInstance == null) {
-            httpCounterInstance = new HttpCounter();
-        }
-        return httpCounterInstance;
+    public static synchronized void reset() {
+        HttpCounter.succRequests = 0;
+        HttpCounter.failedRequests = 0;
     }
 }

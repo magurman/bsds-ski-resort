@@ -34,7 +34,8 @@ public class PhaseRunner extends Thread  {
   /**
    * Run this phase. 
    * 
-   * Creates numThreads SkierThreads to execute a request 
+   * Creates numThreads SkierThreads to execute Post requests, divides the
+   * range of skiers evenly among the threads that it launches 
    */
   @Override
   public void run() {

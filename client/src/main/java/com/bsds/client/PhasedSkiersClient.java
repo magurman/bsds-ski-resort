@@ -7,6 +7,7 @@ import java.util.concurrent.CyclicBarrier;
  * A class to manage multiple phases of sending client requests to the Upic Ski Resort Server.
  * 
  * This class currently launches three phases of sending requests to the server: startup, peak, and cooldown
+ * 
  */
 public class PhasedSkiersClient {
   private int numThreads;
@@ -36,33 +37,22 @@ public class PhasedSkiersClient {
 
   public void start() throws InterruptedException {
 
-    // launch phase one - startup
-    int phaseOneNumRuns = (int) Math.round(0.1 * numRuns);
-    PhaseRunner phaseOne = new PhaseRunner(numThreads/4, skierIDStart, skierIDEnd,
-        numSkiLifts, hostname, port, 1, 90, phaseOneNumRuns,
-        PhasedSkiersClient.phaseOneBarrier);
-    phaseOne.start();
+    // launch phase 1 10% of runs/skier, 1/4 of total threads, start at min 1 end at min 90
+    launchPhase((float) 0.1, 4, 1, 90, PhasedSkiersClient.phaseOneBarrier);
 
     // wait for phase one to be 10% complete before continuing
     while(phaseOneBarrier.getNumberWaiting() < Math.round((float) (numThreads/4)*.1)){
     }
 
-    // launch phase 2 - peak
-    int phaseTwoNumRuns = (int) Math.round(0.8 * numRuns);
-    PhaseRunner phaseTwo = new PhaseRunner(numThreads, skierIDStart, skierIDEnd, numSkiLifts,
-        hostname, port, 91, 360, phaseTwoNumRuns, phaseTwoBarrier);
-    phaseTwo.start();
+    // launch phase 2 80% of runs/skier, max num threads, start at min 91 end at min 360
+    launchPhase((float) 0.8, 1, 91, 360, PhasedSkiersClient.phaseTwoBarrier);
 
     // wait for phase two to be 10% complete before continuing 
     while(phaseTwoBarrier.getNumberWaiting() < Math.round(numThreads *.1)){
     }
 
-    // launch phase 3
-    int phaseThreeNumRuns = (int) Math.round(0.1 * numRuns);
-    PhaseRunner phaseThree = new PhaseRunner(numThreads/4, skierIDStart, skierIDEnd,
-        numSkiLifts, hostname, port, 361, 420, phaseThreeNumRuns,
-        phaseThreeBarrier);
-    phaseThree.start();
+    // launch phase 3 10% of runs, 1/4 num threads, start at min 361 end at min 420
+    launchPhase((float) 0.1, 4, 361, 420, PhasedSkiersClient.phaseThreeBarrier);
 
     try {
       phaseOneBarrier.await();
@@ -81,6 +71,17 @@ public class PhasedSkiersClient {
     } catch (BrokenBarrierException e) {
       e.printStackTrace();
     }
+  }
+
+  private void launchPhase(float runScaleFactor, int threadScaleFactor, int startTime,
+   int endTime, CyclicBarrier barrier){
+    // launch phase one - startup
+    int phaseNumRuns = (int) Math.round(runScaleFactor * numRuns);
+    int phaseNumThreads = numThreads/threadScaleFactor;
+    PhaseRunner phase = new PhaseRunner(phaseNumThreads, skierIDStart, skierIDEnd,
+        numSkiLifts, hostname, port, startTime, endTime, phaseNumRuns,
+        barrier);
+    phase.start();
   }
 
 }

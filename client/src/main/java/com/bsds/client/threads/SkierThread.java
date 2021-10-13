@@ -11,31 +11,28 @@ public class SkierThread extends Thread {
 
     private final String hostname;
     private final int port;
-    private final int startSkierID;
-    private int endSkierID;
     private int startTime;
     private int endTime;
     private int numSkiLifts;
-    private int numRuns;
     public CyclicBarrier barrier;
+    private int numSkiers;
+    private int numRunsForPhase;
 
     public SkierThread(String hostname, int port, int startSkierID, int endSkierID, int startTime,
                        int endTime, int numSkiLifts, int numRuns, CyclicBarrier barrier) {
         this.hostname = hostname;
         this.port = port;
-        this.startSkierID = startSkierID;
-        this.endSkierID = endSkierID;
         this.startTime = startTime;
         this.endTime = endTime;
         this.barrier = barrier;
         this.numSkiLifts = numSkiLifts;
-        this.numRuns = numRuns;
+        this.numSkiers = endSkierID - startSkierID + 1;
+        this.numRunsForPhase = numRuns * numSkiers;
+        System.out.println(numRunsForPhase);
     }
 
     @Override
     public void run() {
-        int numSkiers = endSkierID - startSkierID + 1;
-        int numRunsForPhase = numRuns * (numSkiers);
         for (int j = 1; j <= numRunsForPhase; j++) {
             int currentSkierID = ThreadLocalRandom.current().nextInt(numSkiers);
             try {

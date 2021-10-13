@@ -32,13 +32,13 @@ public class PhasedSkiersClient {
   public void start() throws InterruptedException {
 
     int phaseOneNumRuns = (int) Math.round(0.1 * numRuns);
+    System.out.println(String.format("Phase 1 num runs: %d", phaseOneNumRuns));
     PhaseRunner phaseOne = new PhaseRunner(numThreads/4, skierIDStart, skierIDEnd,
         numSkiLifts, hostname, port, 1, 90, phaseOneNumRuns,
         PhasedSkiersClient.phaseOneBarrier);
     phaseOne.start();
 
     while(phaseOneBarrier.getNumberWaiting() < Math.round((float) (numThreads/4)*.1)){
-
     }
 
     System.out.println("10 percent of Phase One complete! Launching Phase Two!");
@@ -46,6 +46,7 @@ public class PhasedSkiersClient {
         phaseOneBarrier.getNumberWaiting()));
 
     int phaseTwoNumRuns = (int) Math.round(0.8 * numRuns);
+    System.out.println(String.format("Phase 2 num runs: %d", phaseTwoNumRuns));
     PhaseRunner phaseTwo = new PhaseRunner(numThreads, skierIDStart, skierIDEnd, numSkiLifts,
         hostname, port, 91, 360, phaseTwoNumRuns, phaseTwoBarrier);
     phaseTwo.start();
@@ -58,6 +59,7 @@ public class PhasedSkiersClient {
         phaseTwoBarrier.getNumberWaiting()));
 
     int phaseThreeNumRuns = (int) Math.round(0.1 * numRuns);
+    System.out.println(String.format("Phase 3 num runs: %d", phaseThreeNumRuns));
     PhaseRunner phaseThree = new PhaseRunner(numThreads/4, skierIDStart, skierIDEnd,
         numSkiLifts, hostname, port, 361, 420, phaseThreeNumRuns,
         phaseThreeBarrier);

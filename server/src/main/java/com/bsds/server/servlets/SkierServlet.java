@@ -58,6 +58,7 @@ public class SkierServlet {
             return;
         }
 
+        // validate request body
         // this only works for application/json content type
         LiftRide liftRide;
         try {
@@ -159,12 +160,26 @@ public class SkierServlet {
     }
 
     @GetMapping(PATH_PREFIX + "/{skierID}/vertical")
-    public void vertical(@PathVariable String skierID, HttpServletRequest req, HttpServletResponse res) throws IOException {
+    public void vertical(@PathVariable int skierID, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
-
-        // TODO: validate parameters
-
+        // set response content type
         res.setContentType("application/json");
+
+        // get and validate existence of resort query param -- it is required
+        String resortQueryParamter = req.getParameter("resort");
+        if (resortQueryParamter == null) {
+            // set status code
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+
+            // append error message to response
+            ResponseMessage responseMessage = new ResponseMessage("missing required resort parameter!");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
+            return;
+        }
+
+        // this param is not required -- no need to validate but will be null if not included
+        String seasonQueryParameter = req.getParameter("season");
 
         // mock for data lookup
         boolean dataNotFound = false;

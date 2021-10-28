@@ -8,6 +8,7 @@ import java.util.Base64;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bsds.server.model.ResponseMessage;
 import com.bsds.server.model.SkierVertical;
+import com.bsds.server.LiftRideRepository;
+import com.bsds.server.db.LiftRideEntity;
 import com.bsds.server.model.LiftRide;
 
 import com.google.gson.Gson;
@@ -30,6 +33,9 @@ public class SkierServlet {
     // gson converts pojo to json string
     private Gson gson = new Gson();
 
+    @Autowired
+    private LiftRideRepository liftRideRepository;
+    
     /**
      * 
      * @param resortID
@@ -41,7 +47,7 @@ public class SkierServlet {
      * @throws IOException
      */
     @PostMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")
-    public void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
+    void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                      HttpServletRequest req, HttpServletResponse res) throws IOException {
 
         // get auth credentials from request and perform default authorization test

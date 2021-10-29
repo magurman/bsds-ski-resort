@@ -1,11 +1,15 @@
 package com.bsds.server.servlets;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,12 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bsds.server.model.ResponseMessage;
 import com.bsds.server.model.SkierVertical;
+import com.bsds.server.LiftRideRepository;
+import com.bsds.server.db.LiftRideEntity;
 import com.bsds.server.model.LiftRide;
 
 import com.google.gson.Gson;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class SkierServlet {
@@ -28,6 +33,9 @@ public class SkierServlet {
     // gson converts pojo to json string
     private Gson gson = new Gson();
 
+    @Autowired
+    private LiftRideRepository liftRideRepository;
+    
     /**
      * 
      * @param resortID
@@ -39,11 +47,29 @@ public class SkierServlet {
      * @throws IOException
      */
     @PostMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")
-    public void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
+    void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                      HttpServletRequest req, HttpServletResponse res) throws IOException {
+
+        // get auth credentials from request and perform default authorization test
+        final String[] creds = getCredentialsFromRequest(req);
+
+        // validate credentials 
+        if (creds.length == 0 || !creds[0].equals("admin") || !creds[1].equals("admin")) {
+            res.setHeader(HttpHeaders.WWW_AUTHENTICATE, "invalid authorization credentials");
+            res.setStatus(HttpStatus.UNAUTHORIZED.value());
+
+            ResponseMessage responseMessage = new ResponseMessage("invalid username/password provided. Please retry with new credentials.");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
+            return;
+        }
+
+        // validate request body
+        // this only works for application/json content type
         LiftRide liftRide;
         try {
-            String reqBody = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            byte[] inputStreamBytes = req.getInputStream().readAllBytes();
+            String reqBody = new String(inputStreamBytes, StandardCharsets.UTF_8);
             liftRide = gson.fromJson(reqBody, LiftRide.class);
         } catch (Exception e) {
             // set media type
@@ -140,12 +166,26 @@ public class SkierServlet {
     }
 
     @GetMapping(PATH_PREFIX + "/{skierID}/vertical")
-    public void vertical(@PathVariable String skierID, HttpServletRequest req, HttpServletResponse res) throws IOException {
+    public void vertical(@PathVariable int skierID, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
-
-        // TODO: validate parameters
-
+        // set response content type
         res.setContentType("application/json");
+
+        // get and validate existence of resort query param -- it is required
+        String resortQueryParamter = req.getParameter("resort");
+        if (resortQueryParamter == null) {
+            // set status code
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+
+            // append error message to response
+            ResponseMessage responseMessage = new ResponseMessage("missing required resort parameter!");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
+            return;
+        }
+
+        // this param is not required -- no need to validate but will be null if not included
+        String seasonQueryParameter = req.getParameter("season");
 
         // mock for data lookup
         boolean dataNotFound = false;
@@ -195,4 +235,28 @@ public class SkierServlet {
         return dayID > 0 && dayID < 367;
     }
 
+    /**
+     * Get credentials from HttpServletRequest and return them as a String[] in the format: 
+     * ["username", "password"]
+     * 
+     * This method currently only supports Basic auth
+     * @param req - the request which contains authentication credentials 
+     * @return the authentication credentials extracted from the request
+     */
+    private String[] getCredentialsFromRequest(HttpServletRequest req) {
+
+        final String auth = req.getHeader(HttpHeaders.AUTHORIZATION);
+        String[] credValues = {};
+        // for now, only support Basic auth
+        if (auth != null && auth.toLowerCase().startsWith("basic")) {
+            // Authorization: Basic base64credentials
+            String base64Credentials = auth.substring("Basic".length()).trim();
+            byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+            String creds = new String(credDecoded, StandardCharsets.UTF_8);
+
+            credValues = creds.split(":", 2);
+        }
+
+        return credValues;
+    }
 }

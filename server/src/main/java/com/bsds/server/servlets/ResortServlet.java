@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
@@ -60,7 +61,7 @@ public class ResortServlet {
      * @throws IOException
      */
     @GetMapping(PATH_PREFIX + "/{resortID}/seasons")
-    public void seasons(@PathVariable String resortID, HttpServletRequest req, HttpServletResponse res) throws IOException {
+    public void seasons(@PathVariable int resortID, HttpServletRequest req, HttpServletResponse res) throws IOException {
         
         // set media type
         res.setContentType("application/json");
@@ -110,9 +111,29 @@ public class ResortServlet {
      * @throws IOException
      */
     @PostMapping(PATH_PREFIX + "/{resortID}/seasons")
-    public void addSeason(@PathVariable String resortID, HttpServletRequest req, HttpServletResponse res) throws IOException {
-        
-        // TODO: validate request body 
+    public void addSeason(@PathVariable int resortID, HttpServletRequest req, HttpServletResponse res) throws IOException {
+    
+        // validate request body
+        Season season;
+        try {
+            byte[] inputStreamBytes = req.getInputStream().readAllBytes();
+            String reqBody = new String(inputStreamBytes, StandardCharsets.UTF_8);
+            season = gson.fromJson(reqBody, Season.class);
+        } catch (Exception e) {
+            // set media type
+            res.setContentType("application/json");
+
+            // set status code
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
+
+            // append error message to response
+            ResponseMessage responseMessage = new ResponseMessage("invalid request body! Req body must be Season json object!");
+            String messageJson = gson.toJson(responseMessage);
+            res.getWriter().append(messageJson);
+            return;
+        }
+
+
 
         boolean invalidInputs = false;
         if (invalidInputs) {

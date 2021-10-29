@@ -1,9 +1,9 @@
 package com.bsds.server.model;
 
 public class Season {
-    private String season;
+    private String year;
     
-    public Season(String season) {
-        this.season = season;
+    public Season(String year) {
+        this.year = year;
     }
 }

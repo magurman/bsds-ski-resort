@@ -9,7 +9,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-// @Table(name = "LiftRide")
+@Table(name = "LiftRide")
 public class LiftRideEntity {
     
     @Id
@@ -24,8 +24,7 @@ public class LiftRideEntity {
     @ManyToOne
     private SkierEntity skier;
 
-    @ManyToOne
-    private SeasonEntity season;
+    private String season;
 
     private Integer dayID;
     
@@ -41,11 +40,11 @@ public class LiftRideEntity {
         this.dayID = dayID;
     }
 
-    public SeasonEntity getSeason() {
+    public String getSeason() {
         return season;
     }
 
-    public void setSeason(SeasonEntity season) {
+    public void setSeason(String season) {
         this.season = season;
     }
 

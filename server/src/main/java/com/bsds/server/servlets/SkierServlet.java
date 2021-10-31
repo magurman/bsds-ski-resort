@@ -18,13 +18,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bsds.server.model.ResponseMessage;
 import com.bsds.server.model.SkierVertical;
+import com.bsds.server.LiftRepository;
 import com.bsds.server.LiftRideRepository;
+import com.bsds.server.ResortRepository;
+import com.bsds.server.db.LiftEntity;
 import com.bsds.server.db.LiftRideEntity;
+import com.bsds.server.db.ResortEntity;
 import com.bsds.server.model.LiftRide;
 
 import com.google.gson.Gson;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class SkierServlet {
@@ -35,6 +40,12 @@ public class SkierServlet {
 
     @Autowired
     private LiftRideRepository liftRideRepository;
+
+    @Autowired
+    private LiftRepository liftRepository;
+
+    @Autowired
+    private ResortRepository resortRepository;
     
     /**
      * 
@@ -71,6 +82,42 @@ public class SkierServlet {
             byte[] inputStreamBytes = req.getInputStream().readAllBytes();
             String reqBody = new String(inputStreamBytes, StandardCharsets.UTF_8);
             liftRide = gson.fromJson(reqBody, LiftRide.class);
+
+            LiftRideEntity liftRideEntity = new LiftRideEntity();
+
+
+            // Optional<LiftEntity> liftEntityResult = liftRepository.findById(liftRide.liftID);
+            // Optional<ResortEntity> resortEntityResult;
+
+            // LiftEntity liftEntity;
+
+            // if (liftEntityResult.isPresent()) {
+                
+            //     // check that resort for this lift matches resort ID passed in uri path
+
+            //     resortEntityResult = resortRepository.findById(liftEntityResult.get().getResort().getResortID());
+            // } else {
+            //     liftEntity = new LiftEntity();
+            //     liftEntity.
+            // }
+
+            LiftEntity liftEntity = new LiftEntity();
+            ResortEntity resortEntity = new ResortEntity();
+            resortEntity.setName("resort 1");
+            // save
+            resortRepository.save(resortEntity);
+
+            liftEntity.setResort(resortEntity);
+            // liftEntity.setLiftID(2);
+            liftEntity.setLiftNumber(1);
+            liftEntity.setVerticalDistance(100);
+            // save
+            liftRepository.save(liftEntity);
+
+            liftRideEntity.setLift(liftEntity);
+            liftRideEntity.setTime(liftRide.time);
+            liftRideRepository.save(liftRideEntity);
+
         } catch (Exception e) {
             // set media type
             res.setContentType("application/json");

@@ -11,10 +11,14 @@ import javax.persistence.Table;
 public class ResortEntity {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer resortID;
 
     private String name;
+
+    public void setResortID(Integer resortID) {
+        this.resortID = resortID;
+    }
 
     public Integer getResortID() {
         return this.resortID;

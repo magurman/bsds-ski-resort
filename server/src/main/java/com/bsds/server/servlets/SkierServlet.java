@@ -18,18 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bsds.server.model.ResponseMessage;
 import com.bsds.server.model.SkierVertical;
-import com.bsds.server.LiftRepository;
-import com.bsds.server.LiftRideRepository;
-import com.bsds.server.ResortRepository;
 import com.bsds.server.db.LiftEntity;
 import com.bsds.server.db.LiftRideEntity;
 import com.bsds.server.db.ResortEntity;
+import com.bsds.server.db.SkierEntity;
+import com.bsds.server.db.UpicDbHelper;
 import com.bsds.server.model.LiftRide;
 
 import com.google.gson.Gson;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class SkierServlet {
@@ -39,13 +37,7 @@ public class SkierServlet {
     private Gson gson = new Gson();
 
     @Autowired
-    private LiftRideRepository liftRideRepository;
-
-    @Autowired
-    private LiftRepository liftRepository;
-
-    @Autowired
-    private ResortRepository resortRepository;
+    private UpicDbHelper upicDbHelper;
     
     /**
      * 
@@ -75,64 +67,6 @@ public class SkierServlet {
             return;
         }
 
-        // validate request body
-        // this only works for application/json content type
-        LiftRide liftRide;
-        try {
-            byte[] inputStreamBytes = req.getInputStream().readAllBytes();
-            String reqBody = new String(inputStreamBytes, StandardCharsets.UTF_8);
-            liftRide = gson.fromJson(reqBody, LiftRide.class);
-
-            LiftRideEntity liftRideEntity = new LiftRideEntity();
-
-
-            // Optional<LiftEntity> liftEntityResult = liftRepository.findById(liftRide.liftID);
-            // Optional<ResortEntity> resortEntityResult;
-
-            // LiftEntity liftEntity;
-
-            // if (liftEntityResult.isPresent()) {
-                
-            //     // check that resort for this lift matches resort ID passed in uri path
-
-            //     resortEntityResult = resortRepository.findById(liftEntityResult.get().getResort().getResortID());
-            // } else {
-            //     liftEntity = new LiftEntity();
-            //     liftEntity.
-            // }
-
-            LiftEntity liftEntity = new LiftEntity();
-            ResortEntity resortEntity = new ResortEntity();
-            resortEntity.setName("resort 1");
-            // save
-            resortRepository.save(resortEntity);
-
-            liftEntity.setResort(resortEntity);
-            // liftEntity.setLiftID(2);
-            liftEntity.setLiftNumber(1);
-            liftEntity.setVerticalDistance(100);
-            // save
-            liftRepository.save(liftEntity);
-
-            liftRideEntity.setLift(liftEntity);
-            liftRideEntity.setTime(liftRide.time);
-            liftRideRepository.save(liftRideEntity);
-
-        } catch (Exception e) {
-            // set media type
-            res.setContentType("application/json");
-
-            // set status code
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("invalid request body! Req body must be LiftRide json object!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
-            return;
-        }
-
-
         // validate dayID parameter
         if (!validateDayID(dayID)) {
             // set media type
@@ -148,21 +82,53 @@ public class SkierServlet {
             return;
         }
 
-        // mock for data lookup
-        boolean dataNotFound = false;
-        if (dataNotFound) {
+        // validate request body
+        // this only works for application/json content type
+        LiftRide liftRide;
+        try {
+            byte[] inputStreamBytes = req.getInputStream().readAllBytes();
+            String reqBody = new String(inputStreamBytes, StandardCharsets.UTF_8);
+            liftRide = gson.fromJson(reqBody, LiftRide.class);
+        } catch (Exception e) {
             // set media type
             res.setContentType("application/json");
 
             // set status code
-            res.setStatus(HttpStatus.NOT_FOUND.value());
+            res.setStatus(HttpStatus.BAD_REQUEST.value());
 
             // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("data not found!!");
+            ResponseMessage responseMessage = new ResponseMessage("invalid request body! Req body must be LiftRide json object!");
             String messageJson = gson.toJson(responseMessage);
             res.getWriter().append(messageJson);
             return;
         }
+
+        // lookup if resort exists in db using resort ID from request       
+        ResortEntity resortEntity = upicDbHelper.findResortEntityById(resortID);
+       
+        if (resortEntity == null) {
+            String resortName = "Resort " + resortID; // will need some way to lookup name from id
+            resortEntity = upicDbHelper.createResortEntity(resortID, resortName); 
+            upicDbHelper.saveResortEntity(resortEntity); // save resort entity to db
+        }
+
+        // lookup if resort exists in db using liftID from request body
+        LiftEntity liftEntity = upicDbHelper.findLiftEntityById(liftRide.liftID);
+
+        if (liftEntity == null) {
+            liftEntity = upicDbHelper.createLiftEntity(liftRide.liftID, resortEntity, 1, 10);// will need some way to determine number from id and vertical distance
+            upicDbHelper.saveLiftEntity(liftEntity); // save lift entity to db
+        }
+
+        // lookup skier in db with id from request path
+        SkierEntity skierEntity = upicDbHelper.findSkierEntityById(skierID);
+        if (skierEntity == null) {
+            skierEntity = upicDbHelper.createSkierEntity(); //create skier entity if it doesn't exist in db
+            upicDbHelper.saveSkierEntity(skierEntity); // save skier entity to db
+        }
+
+        LiftRideEntity liftRideEntity = upicDbHelper.createLiftRideEntity(dayID, liftRide.time, "2021", liftEntity, skierEntity); // create lift ride entity
+        upicDbHelper.saveLiftRideEntity(liftRideEntity); // save lift ride entity to db
 
         // set response status code to CREATED
         res.setStatus(HttpStatus.CREATED.value());

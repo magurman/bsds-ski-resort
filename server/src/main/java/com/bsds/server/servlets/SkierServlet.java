@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,8 +28,12 @@ import com.bsds.server.db.UpicDbHelper;
 import com.bsds.server.model.LiftRide;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @RestController
 public class SkierServlet {
@@ -144,7 +150,7 @@ public class SkierServlet {
         // set media type
         res.setContentType("application/json");
 
-        ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierId(skierID);
+        ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndDayId(skierID, dayID);
 
         Integer total_vertical_distance = 0;
 
@@ -185,7 +191,7 @@ public class SkierServlet {
         res.setStatus(HttpStatus.OK.value());
 
         // append dummy data to response body
-        res.getWriter().append("45353");
+        res.getWriter().append(Integer.toString(total_vertical_distance));
     }
 
     @GetMapping(PATH_PREFIX + "/{skierID}/vertical")
@@ -209,6 +215,39 @@ public class SkierServlet {
 
         // this param is not required -- no need to validate but will be null if not included
         String seasonQueryParameter = req.getParameter("season");
+
+        // Integer totalVertical = 0;
+        List<SkierVertical> skierVerticalList = new ArrayList<>();
+
+        if (seasonQueryParameter != null) {
+            ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndSeason(skierID, seasonQueryParameter);
+            List<LiftRideEntity> fileredLiftRides = liftRides.stream().filter(r -> r.getLift().getResort().getResortID() == Integer.parseInt(resortQueryParamter)).collect(Collectors.toList());
+
+            Integer totalVertical = fileredLiftRides.stream().mapToInt((l)-> l.getLift().getVerticalDistance()).sum();
+
+            skierVerticalList.add(new SkierVertical(seasonQueryParameter, totalVertical)); 
+        } else {
+            ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierId(skierID);
+            List<LiftRideEntity> fileredLiftRides = liftRides.stream().filter(r -> r.getLift().getResort().getResortID() == Integer.parseInt(resortQueryParamter)).collect(Collectors.toList());
+
+            HashMap<String, Integer> seasonVerticalMap = new HashMap<>();
+
+            for (LiftRideEntity liftRide : fileredLiftRides) {
+                if (seasonVerticalMap.containsKey(liftRide.getSeason())) {
+                    Integer currentVertical = seasonVerticalMap.get(liftRide.getSeason());
+                    currentVertical = currentVertical + liftRide.getLift().getVerticalDistance();
+                    seasonVerticalMap.put(liftRide.getSeason(), currentVertical);
+                } else {
+                    Integer currentVertical = liftRide.getLift().getVerticalDistance();
+                    seasonVerticalMap.put(liftRide.getSeason(), currentVertical);
+                }
+            }
+
+            for (Map.Entry<String, Integer> entry : seasonVerticalMap.entrySet()) {
+                skierVerticalList.add(new SkierVertical(entry.getKey(), entry.getValue()));
+            }
+
+        }
 
         // mock for data lookup
         boolean dataNotFound = false;
@@ -240,13 +279,9 @@ public class SkierServlet {
         // set response status code to SC_OK
         res.setStatus(HttpStatus.OK.value());
 
-        // append dummy data to response body 
-        List<SkierVertical> skierVerticalList = new ArrayList<>();
-        skierVerticalList.add(new SkierVertical("1", 100));
-        skierVerticalList.add(new SkierVertical("2", 150));
-        String dummySkierVerticalList= gson.toJson(skierVerticalList);
+        String finalSkierVerticalList = gson.toJson(skierVerticalList);
 
-        res.getWriter().append(dummySkierVerticalList);
+        res.getWriter().append(finalSkierVerticalList);
     }
 
     /**

@@ -88,8 +88,16 @@ public class UpicDbHelper {
     }
 
 
-    public ArrayList<LiftRideEntity> findLiftRideBySkierId(Integer skierId) {
-        return this.liftRideRepository.findBySkier_skierID(skierId);
+    public ArrayList<LiftRideEntity> findLiftRideBySkierId(Integer skierID) {
+        return this.liftRideRepository.findBySkier_skierID(skierID);
+    }
+
+    public ArrayList<LiftRideEntity> findLiftRideBySkierIdAndDayId(Integer skierID, Integer dayID) {
+        return this.liftRideRepository.findBySkier_skierIDAndDayID(skierID, dayID);
+    }
+
+    public ArrayList<LiftRideEntity> findLiftRideBySkierIdAndSeason(Integer skierID, String season) {
+        return this.liftRideRepository.findBySkier_skierIDAndSeason(skierID, season);
     }
 
     public LiftRideEntity createLiftRideEntity(Integer dayID, Integer time, String season, LiftEntity liftEntity, SkierEntity skierEntity){

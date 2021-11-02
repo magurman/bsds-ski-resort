@@ -115,4 +115,8 @@ public class UpicDbHelper {
         this.liftRideRepository.save(liftRideEntity);
     }
 
+    public ArrayList<ResortEntity> findAllResorts() {
+        return (ArrayList<ResortEntity>) this.resortRepository.findAll();
+    }
+
 }

@@ -150,16 +150,6 @@ public class SkierServlet {
         // set media type
         res.setContentType("application/json");
 
-        ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndDayId(skierID, dayID);
-
-        Integer total_vertical_distance = 0;
-
-        for (LiftRideEntity lr : liftRides) {
-            LiftEntity lift = lr.getLift();
-            total_vertical_distance = total_vertical_distance + lift.getVerticalDistance();
-        }
-
-
         // validate dayID parameter
         if (!validateDayID(dayID)) {
 
@@ -173,24 +163,30 @@ public class SkierServlet {
             return;
         }
 
-        // mock for data lookup
-        boolean dataNotFound = false;
-        if (dataNotFound) {
+        ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndDayId(skierID, dayID);
 
+        if (liftRides.size() == 0) {
             // set status code
             res.setStatus(HttpStatus.NOT_FOUND.value());
 
             // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("data not found!");
+            ResponseMessage responseMessage = new ResponseMessage("no lift rides were found for skier: " + skierID + "and day: " + dayID);
             String messageJson = gson.toJson(responseMessage);
             res.getWriter().append(messageJson);
             return;
         }
 
+        Integer total_vertical_distance = 0;
+
+        for (LiftRideEntity lr : liftRides) {
+            LiftEntity lift = lr.getLift();
+            total_vertical_distance = total_vertical_distance + lift.getVerticalDistance();
+        }
+
         // set response status code to SC_OK
         res.setStatus(HttpStatus.OK.value());
 
-        // append dummy data to response body
+        // append data to response body
         res.getWriter().append(Integer.toString(total_vertical_distance));
     }
 
@@ -221,6 +217,18 @@ public class SkierServlet {
 
         if (seasonQueryParameter != null) {
             ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndSeason(skierID, seasonQueryParameter);
+
+            if (liftRides.size() == 0) {
+                // set status code
+                res.setStatus(HttpStatus.NOT_FOUND.value());
+
+                // append error message to response
+                ResponseMessage responseMessage = new ResponseMessage("no lift rides found for skier " + skierID);
+                String messageJson = gson.toJson(responseMessage);
+                res.getWriter().append(messageJson);
+                return;
+            }
+
             List<LiftRideEntity> fileredLiftRides = liftRides.stream().filter(r -> r.getLift().getResort().getResortID() == Integer.parseInt(resortQueryParamter)).collect(Collectors.toList());
 
             Integer totalVertical = fileredLiftRides.stream().mapToInt((l)-> l.getLift().getVerticalDistance()).sum();

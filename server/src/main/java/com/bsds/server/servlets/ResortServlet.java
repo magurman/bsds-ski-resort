@@ -1,5 +1,6 @@
 package com.bsds.server.servlets;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.bsds.server.db.ResortEntity;
+import com.bsds.server.db.UpicDbHelper;
 import com.bsds.server.model.Resort;
 import com.bsds.server.model.ResponseMessage;
 import com.bsds.server.model.Season;
@@ -33,6 +36,9 @@ public class ResortServlet {
     // gson converts pojo to json string
     private Gson gson = new Gson();
 
+    @Autowired
+    private UpicDbHelper upicDbHelper;
+
     /**
      * GET all ski resorts 
      * @param req - HttpServletRequest
@@ -41,16 +47,15 @@ public class ResortServlet {
      */
     @GetMapping(PATH_PREFIX)
     public void skiResorts(HttpServletRequest req, HttpServletResponse res) throws IOException {
+
+        ArrayList<ResortEntity> allResorts = this.upicDbHelper.findAllResorts();
+
+        String resortsList = gson.toJson(allResorts);
+
         // set response status code to SC_OK
         res.setStatus(HttpStatus.OK.value());
         
-        // append dummy data to response body 
-        List<Resort> resorts = new ArrayList<>();
-        resorts.add(new Resort("dummy resort 1", 1));
-        resorts.add(new Resort("dummy resort 2", 2));
-
-        String dummyResortList = gson.toJson(resorts);
-        res.getWriter().append(dummyResortList);
+        res.getWriter().append(resortsList);
     }
 
     /**
@@ -67,28 +72,28 @@ public class ResortServlet {
         res.setContentType("application/json");
 
         // mock for id validation
-        boolean invalidID = false;
-        if (invalidID) {
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
+        // boolean invalidID = false;
+        // if (invalidID) {
+        //     res.setStatus(HttpStatus.BAD_REQUEST.value());
 
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("invalid resort ID!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
-            return;
-        }
+        //     // append error message to response
+        //     ResponseMessage responseMessage = new ResponseMessage("invalid resort ID!");
+        //     String messageJson = gson.toJson(responseMessage);
+        //     res.getWriter().append(messageJson);
+        //     return;
+        // }
 
-        // mock for resort lookup
-        boolean foundResort = true;
-        if (!foundResort) {
-            res.setStatus(HttpStatus.NOT_FOUND.value());
+        // // mock for resort lookup
+        // boolean foundResort = true;
+        // if (!foundResort) {
+        //     res.setStatus(HttpStatus.NOT_FOUND.value());
 
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("resort not found!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
-            return;
-        }
+        //     // append error message to response
+        //     ResponseMessage responseMessage = new ResponseMessage("resort not found!");
+        //     String messageJson = gson.toJson(responseMessage);
+        //     res.getWriter().append(messageJson);
+        //     return;
+        // }
 
         // set response status code to OK
         res.setStatus(HttpStatus.OK.value());
@@ -96,11 +101,10 @@ public class ResortServlet {
         // append resort ID to response body 
 
         List<Season> seasons = new ArrayList<>();
-        seasons.add(new Season("season 1"));
-        seasons.add(new Season("season 2"));
+        seasons.add(new Season("2021"));
 
-        String dummySeasonsList = gson.toJson(seasons);
-        res.getWriter().append(dummySeasonsList);
+        String seasonsList = gson.toJson(seasons);
+        res.getWriter().append(seasonsList);
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.bsds.server.db;
 
+import java.lang.StackWalker.Option;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import com.bsds.server.LiftRepository;
@@ -69,14 +71,26 @@ public class UpicDbHelper {
         return skierEntity;
     }
 
-    public SkierEntity createSkierEntity() {
-        return new SkierEntity();
+    public SkierEntity createSkierEntity(Integer skierID) {
+        SkierEntity newSkier = new SkierEntity();
+        newSkier.setSkierID(skierID);
+        return newSkier;
     }
 
     public void saveSkierEntity(SkierEntity skierEntity) {
         this.skierRepository.save(skierEntity);
     }
 
+    public LiftRideEntity findLiftRideById(Integer liftRideId) {
+        Optional<LiftRideEntity> liftRideEntityResult = this.liftRideRepository.findById(liftRideId);
+        LiftRideEntity liftRideEntity = liftRideEntityResult.isPresent() ? liftRideEntityResult.get() : null;
+        return liftRideEntity;
+    }
+
+
+    public ArrayList<LiftRideEntity> findLiftRideBySkierId(Integer skierId) {
+        return this.liftRideRepository.findBySkier_skierID(skierId);
+    }
 
     public LiftRideEntity createLiftRideEntity(Integer dayID, Integer time, String season, LiftEntity liftEntity, SkierEntity skierEntity){
         LiftRideEntity liftRideEntity = new LiftRideEntity();

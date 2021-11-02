@@ -123,7 +123,7 @@ public class SkierServlet {
         // lookup skier in db with id from request path
         SkierEntity skierEntity = upicDbHelper.findSkierEntityById(skierID);
         if (skierEntity == null) {
-            skierEntity = upicDbHelper.createSkierEntity(); //create skier entity if it doesn't exist in db
+            skierEntity = upicDbHelper.createSkierEntity(skierID); //create skier entity if it doesn't exist in db
             upicDbHelper.saveSkierEntity(skierEntity); // save skier entity to db
         }
 
@@ -143,6 +143,16 @@ public class SkierServlet {
 
         // set media type
         res.setContentType("application/json");
+
+        ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierId(skierID);
+
+        Integer total_vertical_distance = 0;
+
+        for (LiftRideEntity lr : liftRides) {
+            LiftEntity lift = lr.getLift();
+            total_vertical_distance = total_vertical_distance + lift.getVerticalDistance();
+        }
+
 
         // validate dayID parameter
         if (!validateDayID(dayID)) {

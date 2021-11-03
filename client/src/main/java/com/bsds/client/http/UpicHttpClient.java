@@ -46,7 +46,7 @@ public class UpicHttpClient {
      * @throws InterruptedException
      * @throws IOException
      */
-    public static void postWriteLifeRide(String url, int time, int liftID) throws IOException, InterruptedException  {
+    public static void postWriteLiftRide(String url, int time, int liftID) throws IOException, InterruptedException  {
 
         // create lift ride POJO and convert to JSON string 
         LiftRide liftRide = new LiftRide(time, liftID);
@@ -57,6 +57,19 @@ public class UpicHttpClient {
         HttpResponse<String> response = UpicHttpClient.getInstance().send(postRequest, HttpResponse.BodyHandlers.ofString());
         int responseCode = response.statusCode();
 
+        logResponse(responseCode);
+    }
+
+
+    public static void getVerticalForSkiDay(String url) throws IOException, InterruptedException {
+        HttpRequest getRequest = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+        HttpResponse<String> response = UpicHttpClient.getInstance().send(getRequest, HttpResponse.BodyHandlers.ofString());
+        int responseCode = response.statusCode();
+
+        logResponse(responseCode);
+    }
+
+    public static void logResponse(int responseCode){
         // check response code and log any 4xx or 5xx errors
         List<HttpStatus> values = Arrays.asList(HttpStatus.values());
         for (HttpStatus status : values) {
@@ -65,7 +78,7 @@ public class UpicHttpClient {
                 HttpStatus.Series httpStatusSeries = status.series();
 
                 if (httpStatusSeries.equals(HttpStatus.Series.SUCCESSFUL)) {
-                    HttpCounter.incrementNumSuccessful();;
+                    HttpCounter.incrementNumSuccessful();
                 } else if (httpStatusSeries.equals(HttpStatus.Series.CLIENT_ERROR)) {
                     HttpCounter.incrementNumFailed();
                     logger.error("4xx client error. Moving to next request.");
@@ -75,6 +88,6 @@ public class UpicHttpClient {
                 }
             }
         }
-    }
+    };
 
 }

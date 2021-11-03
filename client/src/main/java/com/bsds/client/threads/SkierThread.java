@@ -1,8 +1,10 @@
 package com.bsds.client.threads;
 
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
+import com.bsds.client.http.HttpCounter;
 import com.bsds.client.http.UpicHttpClient;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -22,6 +24,8 @@ public class SkierThread extends Thread {
     public CyclicBarrier barrier;
     private int numSkiers;
     private int numRunsForPhase;
+    private CountDownLatch triggerNextPhaseLatch;
+    private CountDownLatch doneLatch;
 
     /**
      * Constructor, accepts the host and port for the server, the start and end IDs for the skier
@@ -51,6 +55,19 @@ public class SkierThread extends Thread {
         this.numRunsForPhase = numRuns * numSkiers; // total number of runs aka number of POST requests
     }
 
+    public SkierThread(String hostname, int port, int startSkierID, int endSkierID, int startTime,
+                       int endTime, int numSkiLifts, int numRuns, CountDownLatch triggerNextPhaseLatch, CountDownLatch doneLatch) {
+        this.hostname = hostname;
+        this.port = port;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.numSkiLifts = numSkiLifts;
+        this.numSkiers = endSkierID - startSkierID + 1; //calculate number of skiers in range
+        this.numRunsForPhase = numRuns * numSkiers; // total number of runs aka number of POST requests
+        this.triggerNextPhaseLatch = triggerNextPhaseLatch;
+        this.doneLatch = doneLatch;
+    }
+
     @Override
     public void run() {
         // launch post requests 
@@ -67,18 +84,21 @@ public class SkierThread extends Thread {
                 // random lift 
                 int randomLift = ThreadLocalRandom.current().nextInt(1,
                     numSkiLifts + 1);
-                UpicHttpClient.postWriteLifeRide(url, randomTime, randomLift); // Make POST request
+                UpicHttpClient.postWriteLiftRide(url, randomTime, randomLift); // Make POST request
+                UpicHttpClient.getVerticalForSkiDay(url);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        triggerNextPhaseLatch.countDown();
+        doneLatch.countDown();
 
-        try {
-            barrier.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (BrokenBarrierException e) {
-            e.printStackTrace();
-        }
+        // try {
+        //     barrier.await();
+        // } catch (InterruptedException e) {
+        //     e.printStackTrace();
+        // } catch (BrokenBarrierException e) {
+        //     e.printStackTrace();
+        // }
     }
 }

@@ -1,5 +1,7 @@
 package com.bsds.server.db;
 
+import java.lang.StackWalker.Option;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import com.bsds.server.LiftRepository;
@@ -69,14 +71,34 @@ public class UpicDbHelper {
         return skierEntity;
     }
 
-    public SkierEntity createSkierEntity() {
-        return new SkierEntity();
+    public SkierEntity createSkierEntity(Integer skierID) {
+        SkierEntity newSkier = new SkierEntity();
+        newSkier.setSkierID(skierID);
+        return newSkier;
     }
 
     public void saveSkierEntity(SkierEntity skierEntity) {
         this.skierRepository.save(skierEntity);
     }
 
+    public LiftRideEntity findLiftRideById(Integer liftRideId) {
+        Optional<LiftRideEntity> liftRideEntityResult = this.liftRideRepository.findById(liftRideId);
+        LiftRideEntity liftRideEntity = liftRideEntityResult.isPresent() ? liftRideEntityResult.get() : null;
+        return liftRideEntity;
+    }
+
+
+    public ArrayList<LiftRideEntity> findLiftRideBySkierId(Integer skierID) {
+        return this.liftRideRepository.findBySkier_skierID(skierID);
+    }
+
+    public ArrayList<LiftRideEntity> findLiftRideBySkierIdAndDayId(Integer skierID, Integer dayID) {
+        return this.liftRideRepository.findBySkier_skierIDAndDayID(skierID, dayID);
+    }
+
+    public ArrayList<LiftRideEntity> findLiftRideBySkierIdAndSeason(Integer skierID, String season) {
+        return this.liftRideRepository.findBySkier_skierIDAndSeason(skierID, season);
+    }
 
     public LiftRideEntity createLiftRideEntity(Integer dayID, Integer time, String season, LiftEntity liftEntity, SkierEntity skierEntity){
         LiftRideEntity liftRideEntity = new LiftRideEntity();
@@ -91,6 +113,10 @@ public class UpicDbHelper {
 
     public void saveLiftRideEntity(LiftRideEntity liftRideEntity) {
         this.liftRideRepository.save(liftRideEntity);
+    }
+
+    public ArrayList<ResortEntity> findAllResorts() {
+        return (ArrayList<ResortEntity>) this.resortRepository.findAll();
     }
 
 }

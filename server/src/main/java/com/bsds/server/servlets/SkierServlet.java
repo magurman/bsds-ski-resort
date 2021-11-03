@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,8 +28,12 @@ import com.bsds.server.db.UpicDbHelper;
 import com.bsds.server.model.LiftRide;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @RestController
 public class SkierServlet {
@@ -123,7 +129,7 @@ public class SkierServlet {
         // lookup skier in db with id from request path
         SkierEntity skierEntity = upicDbHelper.findSkierEntityById(skierID);
         if (skierEntity == null) {
-            skierEntity = upicDbHelper.createSkierEntity(); //create skier entity if it doesn't exist in db
+            skierEntity = upicDbHelper.createSkierEntity(skierID); //create skier entity if it doesn't exist in db
             upicDbHelper.saveSkierEntity(skierEntity); // save skier entity to db
         }
 
@@ -157,25 +163,31 @@ public class SkierServlet {
             return;
         }
 
-        // mock for data lookup
-        boolean dataNotFound = false;
-        if (dataNotFound) {
+        ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndDayId(skierID, dayID);
 
+        if (liftRides.size() == 0) {
             // set status code
             res.setStatus(HttpStatus.NOT_FOUND.value());
 
             // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("data not found!");
+            ResponseMessage responseMessage = new ResponseMessage("no lift rides were found for skier: " + skierID + "and day: " + dayID);
             String messageJson = gson.toJson(responseMessage);
             res.getWriter().append(messageJson);
             return;
         }
 
+        Integer total_vertical_distance = 0;
+
+        for (LiftRideEntity lr : liftRides) {
+            LiftEntity lift = lr.getLift();
+            total_vertical_distance = total_vertical_distance + lift.getVerticalDistance();
+        }
+
         // set response status code to SC_OK
         res.setStatus(HttpStatus.OK.value());
 
-        // append dummy data to response body
-        res.getWriter().append("45353");
+        // append data to response body
+        res.getWriter().append(Integer.toString(total_vertical_distance));
     }
 
     @GetMapping(PATH_PREFIX + "/{skierID}/vertical")
@@ -199,6 +211,51 @@ public class SkierServlet {
 
         // this param is not required -- no need to validate but will be null if not included
         String seasonQueryParameter = req.getParameter("season");
+
+        // Integer totalVertical = 0;
+        List<SkierVertical> skierVerticalList = new ArrayList<>();
+
+        if (seasonQueryParameter != null) {
+            ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndSeason(skierID, seasonQueryParameter);
+
+            if (liftRides.size() == 0) {
+                // set status code
+                res.setStatus(HttpStatus.NOT_FOUND.value());
+
+                // append error message to response
+                ResponseMessage responseMessage = new ResponseMessage("no lift rides found for skier " + skierID);
+                String messageJson = gson.toJson(responseMessage);
+                res.getWriter().append(messageJson);
+                return;
+            }
+
+            List<LiftRideEntity> fileredLiftRides = liftRides.stream().filter(r -> r.getLift().getResort().getResortID() == Integer.parseInt(resortQueryParamter)).collect(Collectors.toList());
+
+            Integer totalVertical = fileredLiftRides.stream().mapToInt((l)-> l.getLift().getVerticalDistance()).sum();
+
+            skierVerticalList.add(new SkierVertical(seasonQueryParameter, totalVertical)); 
+        } else {
+            ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierId(skierID);
+            List<LiftRideEntity> fileredLiftRides = liftRides.stream().filter(r -> r.getLift().getResort().getResortID() == Integer.parseInt(resortQueryParamter)).collect(Collectors.toList());
+
+            HashMap<String, Integer> seasonVerticalMap = new HashMap<>();
+
+            for (LiftRideEntity liftRide : fileredLiftRides) {
+                if (seasonVerticalMap.containsKey(liftRide.getSeason())) {
+                    Integer currentVertical = seasonVerticalMap.get(liftRide.getSeason());
+                    currentVertical = currentVertical + liftRide.getLift().getVerticalDistance();
+                    seasonVerticalMap.put(liftRide.getSeason(), currentVertical);
+                } else {
+                    Integer currentVertical = liftRide.getLift().getVerticalDistance();
+                    seasonVerticalMap.put(liftRide.getSeason(), currentVertical);
+                }
+            }
+
+            for (Map.Entry<String, Integer> entry : seasonVerticalMap.entrySet()) {
+                skierVerticalList.add(new SkierVertical(entry.getKey(), entry.getValue()));
+            }
+
+        }
 
         // mock for data lookup
         boolean dataNotFound = false;
@@ -230,13 +287,9 @@ public class SkierServlet {
         // set response status code to SC_OK
         res.setStatus(HttpStatus.OK.value());
 
-        // append dummy data to response body 
-        List<SkierVertical> skierVerticalList = new ArrayList<>();
-        skierVerticalList.add(new SkierVertical("1", 100));
-        skierVerticalList.add(new SkierVertical("2", 150));
-        String dummySkierVerticalList= gson.toJson(skierVerticalList);
+        String finalSkierVerticalList = gson.toJson(skierVerticalList);
 
-        res.getWriter().append(dummySkierVerticalList);
+        res.getWriter().append(finalSkierVerticalList);
     }
 
     /**

@@ -12,7 +12,6 @@ import javax.persistence.Table;
 public class LiftEntity {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer liftID;
 
     @ManyToOne

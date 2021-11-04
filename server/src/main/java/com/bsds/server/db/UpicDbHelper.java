@@ -128,8 +128,11 @@ public class UpicDbHelper {
         return (ArrayList<StatisticsEntity>) this.statisticsRepository.findAll();
     }
 
-    public ArrayList<StatisticsEntity> findStatisticsByURLAndOperation(String URL, String operation){
-        return (ArrayList<StatisticsEntity>) this.statisticsRepository.findByURLAndOperation(URL, operation);
+    public synchronized StatisticsEntity findStatisticsByURLAndOperation(String URL, String operation){
+        return this.statisticsRepository.findByURLAndOperation(URL, operation);
     }
 
+    public void saveStatistics(StatisticsEntity stats){
+        this.statisticsRepository.save(stats);
+    }
 }

@@ -57,7 +57,7 @@ public class SkierServlet {
      * @throws IOException
      */
     @PostMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")
-    void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
+    synchronized void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                      HttpServletRequest req, HttpServletResponse res) throws IOException {
         
         long startTime = System.currentTimeMillis();
@@ -113,7 +113,7 @@ public class SkierServlet {
 
         // lookup if resort exists in db using resort ID from request       
         ResortEntity resortEntity = upicDbHelper.findResortEntityById(resortID);
-       
+        
         if (resortEntity == null) {
             String resortName = "Resort " + resortID; // will need some way to lookup name from id
             resortEntity = upicDbHelper.createResortEntity(resortID, resortName); 
@@ -147,27 +147,36 @@ public class SkierServlet {
 
         long latency = endTime - startTime;
         
-        ArrayList<StatisticsEntity> postStats = upicDbHelper.findStatisticsByURLAndOperation("skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}", "POST");
+        StatisticsEntity postStats = upicDbHelper.findStatisticsByURLAndOperation("/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}", "POST");
         
-        // TODO validate returned data on postStats
+        if(postStats != null){
+            float currentAverageLatency = postStats.getAverageLatency();
+            int currentTotalNumRequests = postStats.getTotalNumRequests();
+            float currentMaximumLatency = postStats.getMaxLatency();
 
-        float currentAverageLatency = postStats.get(0).getAverageLatency();
-        int currentTotalNumRequests = postStats.get(0).getTotalNumRequests();
-        float currentMaximumLatency = postStats.get(0).getMaxLatency();
+            if(latency > currentMaximumLatency){
+                postStats.setMaxLatency(latency);
+            }
 
-        if(latency > currentMaximumLatency){
-            postStats.get(0).setMaxLatency(latency);
+            float newAverageLatency = (currentAverageLatency * currentTotalNumRequests + latency)/ ((float) currentTotalNumRequests + 1);
+            postStats.setAverageLatency(newAverageLatency);
+            postStats.setTotalNumRequests(++currentTotalNumRequests);
+            upicDbHelper.saveStatistics(postStats);
+        } else {
+            StatisticsEntity newStat = new StatisticsEntity();
+            newStat.setMaxLatency(latency);
+            newStat.setTotalNumRequests(1);
+            newStat.setURL("/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
+            newStat.setOperation("POST");
+            newStat.setAverageLatency(latency);
+            upicDbHelper.saveStatistics(newStat);
         }
-
-        float newAverageLatency = (currentAverageLatency + latency)/ ((float) currentTotalNumRequests + 1);
-        postStats.get(0).setAverageLatency(newAverageLatency);
-        postStats.get(0).setTotalNumRequests(currentTotalNumRequests++);
     }
 
     @GetMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")
     public void getVerticalForSkiDay(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                     HttpServletRequest req, HttpServletResponse res) throws IOException {
-
+        long startTime = System.currentTimeMillis();
         // set media type
         res.setContentType("application/json");
 
@@ -209,6 +218,35 @@ public class SkierServlet {
 
         // append data to response body
         res.getWriter().append(Integer.toString(total_vertical_distance));
+
+        long endTime = System.currentTimeMillis();
+
+        long latency = endTime - startTime;
+
+        StatisticsEntity getStats = upicDbHelper.findStatisticsByURLAndOperation("/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}", "GET");
+        
+        if(getStats != null){
+            float currentAverageLatency = getStats.getAverageLatency();
+            int currentTotalNumRequests = getStats.getTotalNumRequests();
+            float currentMaximumLatency = getStats.getMaxLatency();
+
+            if(latency > currentMaximumLatency){
+                getStats.setMaxLatency(latency);
+            }
+
+            float newAverageLatency = (currentAverageLatency * currentTotalNumRequests + latency)/ ((float) currentTotalNumRequests + 1);
+            getStats.setAverageLatency(newAverageLatency);
+            getStats.setTotalNumRequests(++currentTotalNumRequests);
+            upicDbHelper.saveStatistics(getStats);
+        } else {
+            StatisticsEntity newStat = new StatisticsEntity();
+            newStat.setMaxLatency(latency);
+            newStat.setTotalNumRequests(1);
+            newStat.setURL("/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
+            newStat.setOperation("GET");
+            newStat.setAverageLatency(latency);
+            upicDbHelper.saveStatistics(newStat);
+        }
     }
 
     @GetMapping(PATH_PREFIX + "/{skierID}/vertical")

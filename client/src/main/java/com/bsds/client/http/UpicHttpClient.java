@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -52,12 +53,19 @@ public class UpicHttpClient {
         LiftRide liftRide = new LiftRide(time, liftID);
         String body = gson.toJson(liftRide);
 
-        // construct request, send it and get response code 
-        HttpRequest postRequest = HttpRequest.newBuilder().uri(URI.create(url)).POST(BodyPublishers.ofString(body)).build();
+        String encodedCredentials = UpicHttpClient.getEncodedCredentials();
+        HttpRequest postRequest = HttpRequest.newBuilder().header("Authorization", "Basic " + encodedCredentials).uri(URI.create(url)).POST(BodyPublishers.ofString(body)).build();
         HttpResponse<String> response = UpicHttpClient.getInstance().send(postRequest, HttpResponse.BodyHandlers.ofString());
         int responseCode = response.statusCode();
 
         logResponse(responseCode);
+    }
+
+    public static String getEncodedCredentials(){
+        // construct request, send it and get response code 
+        String authorization = "admin:admin";
+        String encodedCredentials = Base64.getEncoder().encodeToString(authorization.getBytes());
+        return encodedCredentials;
     }
 
 

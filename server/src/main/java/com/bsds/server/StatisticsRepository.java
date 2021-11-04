@@ -8,6 +8,5 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface StatisticsRepository extends CrudRepository<StatisticsEntity, Integer>{
     
-    ArrayList<StatisticsEntity> findByURLAndOperation(String URL, String operation);
-    
+    StatisticsEntity findByURLAndOperation(String URL, String operation);   
 }

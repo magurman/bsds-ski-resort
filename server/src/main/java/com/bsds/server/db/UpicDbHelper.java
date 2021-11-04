@@ -128,4 +128,8 @@ public class UpicDbHelper {
         return (ArrayList<StatisticsEntity>) this.statisticsRepository.findAll();
     }
 
+    public ArrayList<StatisticsEntity> findStatisticsByURLAndOperation(String URL, String operation){
+        return (ArrayList<StatisticsEntity>) this.statisticsRepository.findByURLAndOperation(URL, operation);
+    }
+
 }

@@ -24,6 +24,7 @@ import com.bsds.server.db.LiftEntity;
 import com.bsds.server.db.LiftRideEntity;
 import com.bsds.server.db.ResortEntity;
 import com.bsds.server.db.SkierEntity;
+import com.bsds.server.db.StatisticsEntity;
 import com.bsds.server.db.UpicDbHelper;
 import com.bsds.server.model.LiftRide;
 
@@ -145,7 +146,22 @@ public class SkierServlet {
         long endTime = System.currentTimeMillis();
 
         long latency = endTime - startTime;
-        // TODO store latency in db
+        
+        ArrayList<StatisticsEntity> postStats = upicDbHelper.findStatisticsByURLAndOperation("skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}", "POST");
+        
+        // TODO validate returned data on postStats
+
+        float currentAverageLatency = postStats.get(0).getAverageLatency();
+        int currentTotalNumRequests = postStats.get(0).getTotalNumRequests();
+        float currentMaximumLatency = postStats.get(0).getMaxLatency();
+
+        if(latency > currentMaximumLatency){
+            postStats.get(0).setMaxLatency(latency);
+        }
+
+        float newAverageLatency = (currentAverageLatency + latency)/ ((float) currentTotalNumRequests + 1);
+        postStats.get(0).setAverageLatency(newAverageLatency);
+        postStats.get(0).setTotalNumRequests(currentTotalNumRequests++);
     }
 
     @GetMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")

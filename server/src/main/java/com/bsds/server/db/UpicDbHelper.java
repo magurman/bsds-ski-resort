@@ -8,6 +8,8 @@ import com.bsds.server.LiftRepository;
 import com.bsds.server.LiftRideRepository;
 import com.bsds.server.ResortRepository;
 import com.bsds.server.SkierRepository;
+import com.bsds.server.StatisticsRepository;
+import com.bsds.server.model.Statistics;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -23,6 +25,9 @@ public class UpicDbHelper {
 
     @Autowired
     private SkierRepository skierRepository;
+
+    @Autowired
+    private StatisticsRepository statisticsRepository;
 
     public UpicDbHelper() {
 
@@ -117,6 +122,10 @@ public class UpicDbHelper {
 
     public ArrayList<ResortEntity> findAllResorts() {
         return (ArrayList<ResortEntity>) this.resortRepository.findAll();
+    }
+
+    public ArrayList<StatisticsEntity> findAllStatistics(){
+        return (ArrayList<StatisticsEntity>) this.statisticsRepository.findAll();
     }
 
 }

@@ -6,6 +6,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "Statistics")
 public class StatisticsEntity {
@@ -14,7 +16,7 @@ public class StatisticsEntity {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Integer statisticsId;
 
-    private String endpointName;
+    private String operation;
 
     private float averageLatency;
 
@@ -22,20 +24,23 @@ public class StatisticsEntity {
 
     private Integer totalNumRequests;
 
+    private String URL;
+
     public void setStatisticsId(Integer statisticsId){
         this.statisticsId = statisticsId;
     }
 
+    @JsonIgnore
     public Integer getStatisticsId(){
         return this.statisticsId;
     }
 
-    public void setEndpointName(String endpointName){
-        this.endpointName = endpointName;
+    public void setOperation(String operation){
+        this.operation = operation;
     }
 
-    public String getEndpointName(){
-        return this.endpointName;
+    public String getOperation(){
+        return this.operation;
     }
 
     public void setAverageLatency(float averageLatency){
@@ -54,12 +59,21 @@ public class StatisticsEntity {
         return this.maxLatency;
     }
 
+    @JsonIgnore
     public void setTotalNumRequests(Integer totalNumRequests){
         this.totalNumRequests = totalNumRequests;
     }
 
     public int getTotalNumRequests(){
         return this.totalNumRequests;
+    }
+
+    public void setURL(String URL){
+        this.URL = URL;
+    }
+
+    public String getURL(){
+        return this.URL;
     }
 
 }

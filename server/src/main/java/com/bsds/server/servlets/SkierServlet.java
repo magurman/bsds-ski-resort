@@ -58,7 +58,8 @@ public class SkierServlet {
     @PostMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")
     void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                      HttpServletRequest req, HttpServletResponse res) throws IOException {
-
+        
+        long startTime = System.currentTimeMillis();
         // get auth credentials from request and perform default authorization test
         final String[] creds = getCredentialsFromRequest(req);
 
@@ -141,6 +142,10 @@ public class SkierServlet {
 
         // send liftRide back in response
         res.getWriter().append(gson.toJson(liftRide));
+        long endTime = System.currentTimeMillis();
+
+        long latency = endTime - startTime;
+        // TODO store latency in db
     }
 
     @GetMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")

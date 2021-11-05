@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,11 +30,9 @@ import com.bsds.server.db.UpicDbHelper;
 import com.bsds.server.model.LiftRide;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @RestController
@@ -60,33 +59,23 @@ public class SkierServlet {
     synchronized void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                      HttpServletRequest req, HttpServletResponse res) throws IOException {
         
-        long startTime = System.currentTimeMillis();
-        // get auth credentials from request and perform default authorization test
-        final String[] creds = getCredentialsFromRequest(req);
+        long startTime = System.currentTimeMillis(); // for calculating latency
+        
+        final String[] creds = getCredentialsFromRequest(req); // get auth credentials from request and perform default authorization test
 
         // validate credentials 
         if (creds.length == 0 || !creds[0].equals("admin") || !creds[1].equals("admin")) {
-            res.setHeader(HttpHeaders.WWW_AUTHENTICATE, "invalid authorization credentials");
-            res.setStatus(HttpStatus.UNAUTHORIZED.value());
-
-            ResponseMessage responseMessage = new ResponseMessage("invalid username/password provided. Please retry with new credentials.");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put(HttpHeaders.WWW_AUTHENTICATE, "invalid authorization credentials");
+            String messageJson = gson.toJson(new ResponseMessage("invalid username/password provided. Please retry with new credentials."));
+            ServletUtils.formatHttpResponse(res, messageJson, HttpStatus.UNAUTHORIZED.value(), MediaType.APPLICATION_JSON_VALUE, headers);
             return;
         }
 
         // validate dayID parameter
         if (!validateDayID(dayID)) {
-            // set media type
-            res.setContentType("application/json");
-
-            // set status code
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("invalid day ID!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
+            String messageJson = gson.toJson(new ResponseMessage("invalid day ID!"));
+            ServletUtils.formatHttpResponse(res, messageJson, HttpStatus.BAD_REQUEST.value(), MediaType.APPLICATION_JSON_VALUE, null);
             return;
         }
 
@@ -98,38 +87,25 @@ public class SkierServlet {
             String reqBody = new String(inputStreamBytes, StandardCharsets.UTF_8);
             liftRide = gson.fromJson(reqBody, LiftRide.class);
         } catch (Exception e) {
-            // set media type
-            res.setContentType("application/json");
-
-            // set status code
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("invalid request body! Req body must be LiftRide json object!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
+            String messageJson = gson.toJson(new ResponseMessage("invalid request body! Req body must be LiftRide json object!"));
+            ServletUtils.formatHttpResponse(res, messageJson, HttpStatus.BAD_REQUEST.value(), MediaType.APPLICATION_JSON_VALUE, null);
             return;
         }
-
-        // lookup if resort exists in db using resort ID from request       
-        ResortEntity resortEntity = upicDbHelper.findResortEntityById(resortID);
-        
+            
+        ResortEntity resortEntity = upicDbHelper.findResortEntityById(resortID); // lookup if resort exists in db using resort ID from request   
         if (resortEntity == null) {
             String resortName = "Resort " + resortID; // will need some way to lookup name from id
             resortEntity = upicDbHelper.createResortEntity(resortID, resortName); 
             upicDbHelper.saveResortEntity(resortEntity); // save resort entity to db
         }
 
-        // lookup if resort exists in db using liftID from request body
-        LiftEntity liftEntity = upicDbHelper.findLiftEntityById(liftRide.liftID);
-
+        LiftEntity liftEntity = upicDbHelper.findLiftEntityById(liftRide.liftID); // lookup if resort exists in db using liftID from request body
         if (liftEntity == null) {
-            liftEntity = upicDbHelper.createLiftEntity(liftRide.liftID, resortEntity, 1, 10);// will need some way to determine number from id and vertical distance
+            liftEntity = upicDbHelper.createLiftEntity(liftRide.liftID, resortEntity, 1, 10); // will need some way to determine number from id and vertical distance
             upicDbHelper.saveLiftEntity(liftEntity); // save lift entity to db
         }
 
-        // lookup skier in db with id from request path
-        SkierEntity skierEntity = upicDbHelper.findSkierEntityById(skierID);
+        SkierEntity skierEntity = upicDbHelper.findSkierEntityById(skierID); // lookup skier in db with id from request path
         if (skierEntity == null) {
             skierEntity = upicDbHelper.createSkierEntity(skierID); //create skier entity if it doesn't exist in db
             upicDbHelper.saveSkierEntity(skierEntity); // save skier entity to db
@@ -138,71 +114,31 @@ public class SkierServlet {
         LiftRideEntity liftRideEntity = upicDbHelper.createLiftRideEntity(dayID, liftRide.time, "2021", liftEntity, skierEntity); // create lift ride entity
         upicDbHelper.saveLiftRideEntity(liftRideEntity); // save lift ride entity to db
 
-        // set response status code to CREATED
-        res.setStatus(HttpStatus.CREATED.value());
+        ServletUtils.formatHttpResponse(res, null, HttpStatus.CREATED.value(), null, null);
 
-        // send liftRide back in response
-        res.getWriter().append(gson.toJson(liftRide));
-        long endTime = System.currentTimeMillis();
-
-        long latency = endTime - startTime;
-        
-        StatisticsEntity postStats = upicDbHelper.findStatisticsByURLAndOperation("/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}", "POST");
-        
-        if(postStats != null){
-            float currentAverageLatency = postStats.getAverageLatency();
-            int currentTotalNumRequests = postStats.getTotalNumRequests();
-            float currentMaximumLatency = postStats.getMaxLatency();
-
-            if(latency > currentMaximumLatency){
-                postStats.setMaxLatency(latency);
-            }
-
-            float newAverageLatency = (currentAverageLatency * currentTotalNumRequests + latency)/ ((float) currentTotalNumRequests + 1);
-            postStats.setAverageLatency(newAverageLatency);
-            postStats.setTotalNumRequests(++currentTotalNumRequests);
-            upicDbHelper.saveStatistics(postStats);
-        } else {
-            StatisticsEntity newStat = new StatisticsEntity();
-            newStat.setMaxLatency(latency);
-            newStat.setTotalNumRequests(1);
-            newStat.setURL("/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
-            newStat.setOperation("POST");
-            newStat.setAverageLatency(latency);
-            upicDbHelper.saveStatistics(newStat);
-        }
+        long latency = System.currentTimeMillis() - startTime;
+        this.updateStatistics(latency, HttpMethod.POST.name(), "/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
+    
     }
 
     @GetMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")
     public void getVerticalForSkiDay(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                     HttpServletRequest req, HttpServletResponse res) throws IOException {
-        long startTime = System.currentTimeMillis();
-        // set media type
-        res.setContentType("application/json");
+        
+        long startTime = System.currentTimeMillis(); // for calculating latency
 
         // validate dayID parameter
         if (!validateDayID(dayID)) {
-
-            // set status code
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("invalid day ID!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
+            String messageJson = gson.toJson(new ResponseMessage("invalid day ID!"));
+            ServletUtils.formatHttpResponse(res, messageJson, HttpStatus.BAD_REQUEST.value(), MediaType.APPLICATION_JSON_VALUE, null);
             return;
         }
 
         ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndDayId(skierID, dayID);
 
         if (liftRides.size() == 0) {
-            // set status code
-            res.setStatus(HttpStatus.NOT_FOUND.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("no lift rides were found for skier: " + skierID + "and day: " + dayID);
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
+            String messageJson = gson.toJson(new ResponseMessage("no lift rides were found for skier: " + skierID + "and day: " + dayID));
+            ServletUtils.formatHttpResponse(res, messageJson, HttpStatus.NOT_FOUND.value(), MediaType.APPLICATION_JSON_VALUE, null);
             return;
         }
 
@@ -213,63 +149,25 @@ public class SkierServlet {
             total_vertical_distance = total_vertical_distance + lift.getVerticalDistance();
         }
 
-        // set response status code to SC_OK
-        res.setStatus(HttpStatus.OK.value());
+        ServletUtils.formatHttpResponse(res, Integer.toString(total_vertical_distance), HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
 
-        // append data to response body
-        res.getWriter().append(Integer.toString(total_vertical_distance));
+        long latency = System.currentTimeMillis() - startTime;
+        this.updateStatistics(latency, HttpMethod.GET.name(), "/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
 
-        long endTime = System.currentTimeMillis();
-
-        long latency = endTime - startTime;
-
-        StatisticsEntity getStats = upicDbHelper.findStatisticsByURLAndOperation("/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}", "GET");
-        
-        if(getStats != null){
-            float currentAverageLatency = getStats.getAverageLatency();
-            int currentTotalNumRequests = getStats.getTotalNumRequests();
-            float currentMaximumLatency = getStats.getMaxLatency();
-
-            if(latency > currentMaximumLatency){
-                getStats.setMaxLatency(latency);
-            }
-
-            float newAverageLatency = (currentAverageLatency * currentTotalNumRequests + latency)/ ((float) currentTotalNumRequests + 1);
-            getStats.setAverageLatency(newAverageLatency);
-            getStats.setTotalNumRequests(++currentTotalNumRequests);
-            upicDbHelper.saveStatistics(getStats);
-        } else {
-            StatisticsEntity newStat = new StatisticsEntity();
-            newStat.setMaxLatency(latency);
-            newStat.setTotalNumRequests(1);
-            newStat.setURL("/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
-            newStat.setOperation("GET");
-            newStat.setAverageLatency(latency);
-            upicDbHelper.saveStatistics(newStat);
-        }
     }
 
     @GetMapping(PATH_PREFIX + "/{skierID}/vertical")
     public void vertical(@PathVariable int skierID, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
-        // set response content type
-        res.setContentType("application/json");
-
         // get and validate existence of resort query param -- it is required
         String resortQueryParamter = req.getParameter("resort");
         if (resortQueryParamter == null) {
-            // set status code
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("missing required resort parameter!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
+            String messageJson = gson.toJson(new ResponseMessage("missing required resort parameter!"));
+            ServletUtils.formatHttpResponse(res, messageJson, HttpStatus.BAD_REQUEST.value(), MediaType.APPLICATION_JSON_VALUE, null);
             return;
         }
 
-        // this param is not required -- no need to validate but will be null if not included
-        String seasonQueryParameter = req.getParameter("season");
+        String seasonQueryParameter = req.getParameter("season"); // season is not required --  will be null if not included
 
         // Integer totalVertical = 0;
         List<SkierVertical> skierVerticalList = new ArrayList<>();
@@ -278,13 +176,8 @@ public class SkierServlet {
             ArrayList<LiftRideEntity> liftRides = upicDbHelper.findLiftRideBySkierIdAndSeason(skierID, seasonQueryParameter);
 
             if (liftRides.size() == 0) {
-                // set status code
-                res.setStatus(HttpStatus.NOT_FOUND.value());
-
-                // append error message to response
-                ResponseMessage responseMessage = new ResponseMessage("no lift rides found for skier " + skierID);
-                String messageJson = gson.toJson(responseMessage);
-                res.getWriter().append(messageJson);
+                String messageJson = gson.toJson(new ResponseMessage("no lift rides found for skier " + skierID));
+                ServletUtils.formatHttpResponse(res, messageJson, HttpStatus.NOT_FOUND.value(), MediaType.APPLICATION_JSON_VALUE, null);
                 return;
             }
 
@@ -316,39 +209,37 @@ public class SkierServlet {
 
         }
 
-        // mock for data lookup
-        boolean dataNotFound = false;
-        if (dataNotFound) {
-
-            // set status code
-            res.setStatus(HttpStatus.NOT_FOUND.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("data not found!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
-            return;
-        }
-
-        // mock for input validation 
-        boolean invalidInputs = false;
-        if (invalidInputs) {
-            // set status code
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("invalid inputs!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
-            return;
-        }
-
-        // set response status code to SC_OK
-        res.setStatus(HttpStatus.OK.value());
-
         String finalSkierVerticalList = gson.toJson(skierVerticalList);
+        ServletUtils.formatHttpResponse(res, finalSkierVerticalList, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
+    }
 
-        res.getWriter().append(finalSkierVerticalList);
+    /**
+     * Private method to update a statistics entity in the db
+     * @param latency
+     * @param operation
+     * @param url
+     */
+    private void updateStatistics(float latency, String operation, String url) {
+        StatisticsEntity currentStatistics = upicDbHelper.findStatisticsByURLAndOperation(url, operation); // get statistics for this url and http operation
+        
+        if(currentStatistics != null){ // update existing entry
+            float currentAverageLatency = currentStatistics.getAverageLatency();
+            int currentTotalNumRequests = currentStatistics.getTotalNumRequests();
+            float currentMaximumLatency = currentStatistics.getMaxLatency();
+
+            if(latency > currentMaximumLatency){
+                currentStatistics.setMaxLatency(latency);
+            }
+
+            float newAverageLatency = (currentAverageLatency * currentTotalNumRequests + latency)/ ((float) currentTotalNumRequests + 1);
+            currentStatistics.setAverageLatency(newAverageLatency);
+            currentStatistics.setTotalNumRequests(++currentTotalNumRequests);
+
+            upicDbHelper.saveStatistics(currentStatistics);
+        } else { // create new statistics 
+            StatisticsEntity newStat = upicDbHelper.createStatisticsEntity(latency, latency, 1, url, operation);
+            upicDbHelper.saveStatistics(newStat);
+        }
     }
 
     /**

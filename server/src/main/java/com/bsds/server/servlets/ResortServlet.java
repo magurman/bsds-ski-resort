@@ -1,5 +1,6 @@
 package com.bsds.server.servlets;
 
+import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,8 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.bsds.server.db.ResortEntity;
 import com.bsds.server.db.UpicDbHelper;
-import com.bsds.server.model.Resort;
-import com.bsds.server.model.ResponseMessage;
 import com.bsds.server.model.Season;
 
 import java.util.List;
@@ -49,13 +47,8 @@ public class ResortServlet {
     public void skiResorts(HttpServletRequest req, HttpServletResponse res) throws IOException {
 
         ArrayList<ResortEntity> allResorts = this.upicDbHelper.findAllResorts();
-
         String resortsList = gson.toJson(allResorts);
-
-        // set response status code to SC_OK
-        res.setStatus(HttpStatus.OK.value());
-        
-        res.getWriter().append(resortsList);
+        ServletUtils.formatHttpResponse(res, resortsList, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
     }
 
     /**
@@ -68,43 +61,10 @@ public class ResortServlet {
     @GetMapping(PATH_PREFIX + "/{resortID}/seasons")
     public void seasons(@PathVariable int resortID, HttpServletRequest req, HttpServletResponse res) throws IOException {
         
-        // set media type
-        res.setContentType("application/json");
-
-        // mock for id validation
-        // boolean invalidID = false;
-        // if (invalidID) {
-        //     res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-        //     // append error message to response
-        //     ResponseMessage responseMessage = new ResponseMessage("invalid resort ID!");
-        //     String messageJson = gson.toJson(responseMessage);
-        //     res.getWriter().append(messageJson);
-        //     return;
-        // }
-
-        // // mock for resort lookup
-        // boolean foundResort = true;
-        // if (!foundResort) {
-        //     res.setStatus(HttpStatus.NOT_FOUND.value());
-
-        //     // append error message to response
-        //     ResponseMessage responseMessage = new ResponseMessage("resort not found!");
-        //     String messageJson = gson.toJson(responseMessage);
-        //     res.getWriter().append(messageJson);
-        //     return;
-        // }
-
-        // set response status code to OK
-        res.setStatus(HttpStatus.OK.value());
-
-        // append resort ID to response body 
-
-        List<Season> seasons = new ArrayList<>();
-        seasons.add(new Season("2021"));
-
+        List<Season> seasons = new ArrayList<>() { {add(new Season("2021"));} };
         String seasonsList = gson.toJson(seasons);
-        res.getWriter().append(seasonsList);
+        ServletUtils.formatHttpResponse(res, seasonsList, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
+
     }
 
     /**
@@ -116,56 +76,6 @@ public class ResortServlet {
      */
     @PostMapping(PATH_PREFIX + "/{resortID}/seasons")
     public void addSeason(@PathVariable int resortID, HttpServletRequest req, HttpServletResponse res) throws IOException {
-    
-        // validate request body
-        Season season;
-        try {
-            byte[] inputStreamBytes = req.getInputStream().readAllBytes();
-            String reqBody = new String(inputStreamBytes, StandardCharsets.UTF_8);
-            season = gson.fromJson(reqBody, Season.class);
-        } catch (Exception e) {
-            // set media type
-            res.setContentType("application/json");
-
-            // set status code
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("invalid request body! Req body must be Season json object!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
-            return;
-        }
-
-
-
-        boolean invalidInputs = false;
-        if (invalidInputs) {
-            // set media type
-            res.setContentType("application/json");
-
-            res.setStatus(HttpStatus.BAD_REQUEST.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("invalid inputs!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
-            return;
-        }
-
-        boolean foundResort = true;
-        if (!foundResort) {
-            // set media type
-            res.setContentType("application/json");
-
-            res.setStatus(HttpStatus.NOT_FOUND.value());
-
-            // append error message to response
-            ResponseMessage responseMessage = new ResponseMessage("resort not found!");
-            String messageJson = gson.toJson(responseMessage);
-            res.getWriter().append(messageJson);
-            return;
-        }
         
         // set response status code to CREATED
         res.setStatus(HttpStatus.CREATED.value());

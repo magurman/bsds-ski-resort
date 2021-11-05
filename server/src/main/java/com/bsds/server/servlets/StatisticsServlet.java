@@ -14,6 +14,7 @@ import com.google.gson.Gson;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,14 +28,10 @@ public class StatisticsServlet {
 
     @GetMapping("/statistics")
     public void getStatistics(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        res.setContentType("application/json");
 
         ArrayList<StatisticsEntity> stats = upicDbHelper.findAllStatistics();
-
         String statsList = gson.toJson(stats);
-        
-        res.setStatus(HttpStatus.OK.value());
 
-        res.getWriter().append(statsList);
+        ServletUtils.formatHttpResponse(res, statsList, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
     }   
 }

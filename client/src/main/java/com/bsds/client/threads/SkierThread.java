@@ -21,43 +21,12 @@ public class SkierThread extends Thread {
     private int startTime;
     private int endTime;
     private int numSkiLifts;
-    public CyclicBarrier barrier;
     private int numSkiers;
     private int numRunsForPhase;
     private CountDownLatch triggerNextPhaseLatch;
     private CountDownLatch doneLatch;
     private int startSkierId;
     private int endSkierId;
-
-    /**
-     * Constructor, accepts the host and port for the server, the start and end IDs for the skier
-     * range for which it is responsible, the startTime and endTime for the phase, the number of
-     * ski lifts, the number of runs that skiers do in this phase, and a barrier object used for 
-     * concurrency 
-     * 
-     * @param hostname
-     * @param port
-     * @param startSkierID
-     * @param endSkierID
-     * @param startTime
-     * @param endTime
-     * @param numSkiLifts
-     * @param numRuns
-     * @param barrier
-     */
-    public SkierThread(String hostname, int port, int startSkierID, int endSkierID, int startTime,
-                       int endTime, int numSkiLifts, int numRuns, CyclicBarrier barrier) {
-        this.hostname = hostname;
-        this.port = port;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.barrier = barrier;
-        this.numSkiLifts = numSkiLifts;
-        this.startSkierId = startSkierID;
-        this.endSkierId = endSkierID;
-        this.numSkiers = endSkierID - startSkierID + 1; //calculate number of skiers in range
-        this.numRunsForPhase = numRuns * numSkiers; // total number of runs aka number of POST requests
-    }
 
     public SkierThread(String hostname, int port, int startSkierID, int endSkierID, int startTime,
                        int endTime, int numSkiLifts, int numRuns, CountDownLatch triggerNextPhaseLatch, CountDownLatch doneLatch) {
@@ -98,13 +67,5 @@ public class SkierThread extends Thread {
         }
         triggerNextPhaseLatch.countDown();
         doneLatch.countDown();
-
-        // try {
-        //     barrier.await();
-        // } catch (InterruptedException e) {
-        //     e.printStackTrace();
-        // } catch (BrokenBarrierException e) {
-        //     e.printStackTrace();
-        // }
     }
 }

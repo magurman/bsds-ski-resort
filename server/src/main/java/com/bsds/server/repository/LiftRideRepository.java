@@ -1,4 +1,4 @@
-package com.bsds.server;
+package com.bsds.server.repository;
 
 import java.util.ArrayList;
 

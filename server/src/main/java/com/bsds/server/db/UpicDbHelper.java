@@ -3,11 +3,11 @@ package com.bsds.server.db;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import com.bsds.server.LiftRepository;
-import com.bsds.server.LiftRideRepository;
-import com.bsds.server.ResortRepository;
-import com.bsds.server.SkierRepository;
-import com.bsds.server.StatisticsRepository;
+import com.bsds.server.repository.LiftRepository;
+import com.bsds.server.repository.LiftRideRepository;
+import com.bsds.server.repository.ResortRepository;
+import com.bsds.server.repository.SkierRepository;
+import com.bsds.server.repository.StatisticsRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;

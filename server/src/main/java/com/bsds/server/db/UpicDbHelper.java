@@ -1,16 +1,20 @@
 package com.bsds.server.db;
 
-import java.lang.StackWalker.Option;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import com.bsds.server.LiftRepository;
-import com.bsds.server.LiftRideRepository;
-import com.bsds.server.ResortRepository;
-import com.bsds.server.SkierRepository;
+import com.bsds.server.repository.LiftRepository;
+import com.bsds.server.repository.LiftRideRepository;
+import com.bsds.server.repository.ResortRepository;
+import com.bsds.server.repository.SkierRepository;
+import com.bsds.server.repository.StatisticsRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 
+/**
+ * Database helper class to wrap all the database operations for upic ski resort
+ */
 public class UpicDbHelper {
     @Autowired
     private LiftRideRepository liftRideRepository;
@@ -24,10 +28,12 @@ public class UpicDbHelper {
     @Autowired
     private SkierRepository skierRepository;
 
-    public UpicDbHelper() {
+    @Autowired
+    private StatisticsRepository statisticsRepository;
 
-    }
+    public UpicDbHelper() {}
 
+    @Cacheable("resort")
     public ResortEntity findResortEntityById(Integer resortID) {
         Optional<ResortEntity> resortEntityResult = resortRepository.findById(resortID);
         ResortEntity resortEntity = resortEntityResult.isPresent() ? resortEntityResult.get() : null;
@@ -45,6 +51,7 @@ public class UpicDbHelper {
         this.resortRepository.save(resortEntity);
     }
 
+    @Cacheable("lift")
     public LiftEntity findLiftEntityById(Integer liftID) {
         Optional<LiftEntity> liftEntityResult = liftRepository.findById(liftID);
         LiftEntity liftEntity = liftEntityResult.isPresent() ? liftEntityResult.get() : null;
@@ -65,6 +72,7 @@ public class UpicDbHelper {
         this.liftRepository.save(liftEntity);
     }
 
+    @Cacheable("skier")
     public SkierEntity findSkierEntityById(Integer skierID) {
         Optional<SkierEntity> skierEntityResult = this.skierRepository.findById(skierID);
         SkierEntity skierEntity = skierEntityResult.isPresent() ? skierEntityResult.get() : null;
@@ -87,7 +95,6 @@ public class UpicDbHelper {
         return liftRideEntity;
     }
 
-
     public ArrayList<LiftRideEntity> findLiftRideBySkierId(Integer skierID) {
         return this.liftRideRepository.findBySkier_skierID(skierID);
     }
@@ -105,7 +112,7 @@ public class UpicDbHelper {
         liftRideEntity.setTime(time);
         liftRideEntity.setLift(liftEntity);
         liftRideEntity.setDayID(dayID);
-        liftRideEntity.setSeason("2021");
+        liftRideEntity.setSeason(season);
         liftRideEntity.setSkier(skierEntity);
 
         return liftRideEntity;
@@ -119,4 +126,26 @@ public class UpicDbHelper {
         return (ArrayList<ResortEntity>) this.resortRepository.findAll();
     }
 
+    public ArrayList<StatisticsEntity> findAllStatistics(){
+        return (ArrayList<StatisticsEntity>) this.statisticsRepository.findAll();
+    }
+
+    public synchronized StatisticsEntity findStatisticsByURLAndOperation(String URL, String operation){
+        return this.statisticsRepository.findByURLAndOperation(URL, operation);
+    }
+
+    public StatisticsEntity createStatisticsEntity(float maxLatency, float averageLatency, int totalNumRequests, String URL, String operation) {
+        StatisticsEntity newStat = new StatisticsEntity();
+        newStat.setMaxLatency(maxLatency);
+        newStat.setTotalNumRequests(1);
+        newStat.setURL(URL);
+        newStat.setOperation(operation);
+        newStat.setAverageLatency(averageLatency);
+
+        return newStat;
+    }
+
+    public void saveStatistics(StatisticsEntity stats){
+        this.statisticsRepository.save(stats);
+    }
 }

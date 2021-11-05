@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -46,17 +47,37 @@ public class UpicHttpClient {
      * @throws InterruptedException
      * @throws IOException
      */
-    public static void postWriteLifeRide(String url, int time, int liftID) throws IOException, InterruptedException  {
+    public static void postWriteLiftRide(String url, int time, int liftID) throws IOException, InterruptedException  {
 
         // create lift ride POJO and convert to JSON string 
         LiftRide liftRide = new LiftRide(time, liftID);
         String body = gson.toJson(liftRide);
 
-        // construct request, send it and get response code 
-        HttpRequest postRequest = HttpRequest.newBuilder().uri(URI.create(url)).POST(BodyPublishers.ofString(body)).build();
+        String encodedCredentials = UpicHttpClient.getEncodedCredentials();
+        HttpRequest postRequest = HttpRequest.newBuilder().header("Authorization", "Basic " + encodedCredentials).uri(URI.create(url)).POST(BodyPublishers.ofString(body)).build();
         HttpResponse<String> response = UpicHttpClient.getInstance().send(postRequest, HttpResponse.BodyHandlers.ofString());
         int responseCode = response.statusCode();
 
+        logResponse(responseCode);
+    }
+
+    public static String getEncodedCredentials(){
+        // construct request, send it and get response code 
+        String authorization = "admin:admin";
+        String encodedCredentials = Base64.getEncoder().encodeToString(authorization.getBytes());
+        return encodedCredentials;
+    }
+
+
+    public static void getVerticalForSkiDay(String url) throws IOException, InterruptedException {
+        HttpRequest getRequest = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+        HttpResponse<String> response = UpicHttpClient.getInstance().send(getRequest, HttpResponse.BodyHandlers.ofString());
+        int responseCode = response.statusCode();
+
+        logResponse(responseCode);
+    }
+
+    public static void logResponse(int responseCode){
         // check response code and log any 4xx or 5xx errors
         List<HttpStatus> values = Arrays.asList(HttpStatus.values());
         for (HttpStatus status : values) {
@@ -65,7 +86,7 @@ public class UpicHttpClient {
                 HttpStatus.Series httpStatusSeries = status.series();
 
                 if (httpStatusSeries.equals(HttpStatus.Series.SUCCESSFUL)) {
-                    HttpCounter.incrementNumSuccessful();;
+                    HttpCounter.incrementNumSuccessful();
                 } else if (httpStatusSeries.equals(HttpStatus.Series.CLIENT_ERROR)) {
                     HttpCounter.incrementNumFailed();
                     logger.error("4xx client error. Moving to next request.");
@@ -75,6 +96,6 @@ public class UpicHttpClient {
                 }
             }
         }
-    }
+    };
 
 }

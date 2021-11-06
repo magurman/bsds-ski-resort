@@ -56,7 +56,7 @@ public class SkierServlet {
      * @throws IOException
      */
     @PostMapping(PATH_PREFIX + "/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}")
-    synchronized void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
+    void writeLiftRide(@PathVariable int resortID, @PathVariable String seasonID, @PathVariable int dayID, @PathVariable int skierID,
                      HttpServletRequest req, HttpServletResponse res) throws IOException {
         
         long startTime = System.currentTimeMillis(); // for calculating latency
@@ -92,26 +92,34 @@ public class SkierServlet {
             return;
         }
             
-        ResortEntity resortEntity = upicDbHelper.findResortEntityById(resortID); // lookup if resort exists in db using resort ID from request   
-        if (resortEntity == null) {
-            String resortName = "Resort " + resortID; // will need some way to lookup name from id
-            resortEntity = upicDbHelper.createResortEntity(resortID, resortName); 
-            upicDbHelper.saveResortEntity(resortEntity); // save resort entity to db
-        }
+        // ResortEntity resortEntity = upicDbHelper.findResortEntityById(resortID); // lookup if resort exists in db using resort ID from request   
+        // if (resortEntity == null) {
+        //     String resortName = "Resort " + resortID; // will need some way to lookup name from id
+        //     resortEntity = upicDbHelper.createResortEntity(resortID, resortName); 
+        //     upicDbHelper.saveResortEntity(resortEntity); // save resort entity to db
+        // }
 
-        LiftEntity liftEntity = upicDbHelper.findLiftEntityById(liftRide.liftID); // lookup if resort exists in db using liftID from request body
-        if (liftEntity == null) {
-            liftEntity = upicDbHelper.createLiftEntity(liftRide.liftID, resortEntity, 1, 10); // will need some way to determine number from id and vertical distance
-            upicDbHelper.saveLiftEntity(liftEntity); // save lift entity to db
-        }
+        // LiftEntity liftEntity = upicDbHelper.findLiftEntityById(liftRide.liftID); // lookup if resort exists in db using liftID from request body
+        // if (liftEntity == null) {
+        //     liftEntity = upicDbHelper.createLiftEntity(liftRide.liftID, resortEntity, 1, 10); // will need some way to determine number from id and vertical distance
+        //     upicDbHelper.saveLiftEntity(liftEntity); // save lift entity to db
+        // }
 
-        SkierEntity skierEntity = upicDbHelper.findSkierEntityById(skierID); // lookup skier in db with id from request path
-        if (skierEntity == null) {
-            skierEntity = upicDbHelper.createSkierEntity(skierID); //create skier entity if it doesn't exist in db
-            upicDbHelper.saveSkierEntity(skierEntity); // save skier entity to db
-        }
+        // SkierEntity skierEntity = upicDbHelper.findSkierEntityById(skierID); // lookup skier in db with id from request path
+        // if (skierEntity == null) {
+        //     skierEntity = upicDbHelper.createSkierEntity(skierID); //create skier entity if it doesn't exist in db
+        //     upicDbHelper.saveSkierEntity(skierEntity); // save skier entity to db
+        // }
 
-        LiftRideEntity liftRideEntity = upicDbHelper.createLiftRideEntity(dayID, liftRide.time, "2021", liftEntity, skierEntity); // create lift ride entity
+        ResortEntity rEntity = new ResortEntity();
+        rEntity.setResortID(resortID);
+        LiftEntity lEntity = new LiftEntity();
+        lEntity.setLiftID(liftRide.liftID);
+        lEntity.setResort(rEntity);
+        SkierEntity sEntity = new SkierEntity();
+        sEntity.setSkierID(skierID);
+
+        LiftRideEntity liftRideEntity = upicDbHelper.createLiftRideEntity(dayID, liftRide.time, "2021", lEntity, sEntity); // create lift ride entity
         upicDbHelper.saveLiftRideEntity(liftRideEntity); // save lift ride entity to db
 
         ServletUtils.formatHttpResponse(res, null, HttpStatus.CREATED.value(), null, null);

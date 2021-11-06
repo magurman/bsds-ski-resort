@@ -1,5 +1,6 @@
 package com.bsds.client.threads;
 
+import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -49,17 +50,19 @@ public class SkierThread extends Thread {
         for (int j = 1; j <= numRunsForPhase; j++) {
             // get random skier from range
             int currentSkierID = ThreadLocalRandom.current().nextInt(this.startSkierId, this.endSkierId + 1);
+            int resortID = ThreadLocalRandom.current().nextInt(0, 5);
+            int liftID = resortID * 8 + ThreadLocalRandom.current().nextInt(0,8);
             try {
                 String url = "http://" + this.hostname + ":" + this.port
-                    + "/skiers/" + 10 + "/seasons/" + 10 + "/days/"
-                    + 11 + "/skiers/" + currentSkierID;
+                    +  "/skiers/" + resortID + "/seasons/2021/days/"
+                    + 1 + "/skiers/" + currentSkierID;
                 // random time from range for phase
                 int randomTime = ThreadLocalRandom.current().nextInt(startTime,
                     endTime + 1);
                 // random lift 
-                int randomLift = ThreadLocalRandom.current().nextInt(1,
-                    numSkiLifts + 1);
-                UpicHttpClient.postWriteLiftRide(url, randomTime, randomLift); // Make POST request
+                // int randomLift = ThreadLocalRandom.current().nextInt(1,
+                //     numSkiLifts + 1);
+                UpicHttpClient.postWriteLiftRide(url, randomTime, liftID); // Make POST request
                 UpicHttpClient.getVerticalForSkiDay(url);
             } catch (Exception e) {
                 e.printStackTrace();

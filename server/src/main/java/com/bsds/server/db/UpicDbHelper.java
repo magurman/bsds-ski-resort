@@ -130,7 +130,7 @@ public class UpicDbHelper {
         return (ArrayList<StatisticsEntity>) this.statisticsRepository.findAll();
     }
 
-    public synchronized StatisticsEntity findStatisticsByURLAndOperation(String URL, String operation){
+    public StatisticsEntity findStatisticsByURLAndOperation(String URL, String operation){
         return this.statisticsRepository.findByURLAndOperation(URL, operation);
     }
 

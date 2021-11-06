@@ -118,7 +118,7 @@ public class UpicDbHelper {
         return liftRideEntity;
     }
 
-    public void saveLiftRideEntity(LiftRideEntity liftRideEntity) {
+    public synchronized void saveLiftRideEntity(LiftRideEntity liftRideEntity) {
         this.liftRideRepository.save(liftRideEntity);
     }
 

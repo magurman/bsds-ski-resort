@@ -1,10 +1,7 @@
 package com.bsds.client;
 
-import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
-
-import com.bsds.client.http.HttpCounter;
 
 /**
  * A class to manage multiple phases of sending client requests to the Upic Ski Resort Server.
@@ -41,7 +38,6 @@ public class PhasedSkiersClient {
   public void start() throws InterruptedException {
 
     // latch to check when phase one is 10% complete
-    System.out.println((int) Math.round((float) (numThreads/4)*.1));
     CountDownLatch triggerPhaseTwoLatch = new CountDownLatch((int) Math.round((float) (numThreads/4)*.1));
     // latch to check when phase one is done
     CountDownLatch phaseOneDoneLatch = new CountDownLatch((int) (numThreads/4));

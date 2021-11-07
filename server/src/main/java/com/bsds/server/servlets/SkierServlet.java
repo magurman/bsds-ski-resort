@@ -227,7 +227,7 @@ public class SkierServlet {
      * @param operation
      * @param url
      */
-    private void updateStatistics(float latency, String operation, String url) {
+    private synchronized void updateStatistics(float latency, String operation, String url) {
         StatisticsEntity currentStatistics = upicDbHelper.findStatisticsByURLAndOperation(url, operation); // get statistics for this url and http operation
         
         if(currentStatistics != null){ // update existing entry

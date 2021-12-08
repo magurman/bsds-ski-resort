@@ -7,7 +7,7 @@ import com.bsds.server.repository.LiftRepository;
 import com.bsds.server.repository.LiftRideRepository;
 import com.bsds.server.repository.ResortRepository;
 import com.bsds.server.repository.SkierRepository;
-import com.bsds.server.repository.StatisticsRepository;
+// import com.bsds.server.repository.StatisticsRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,8 +28,8 @@ public class UpicDbHelper {
     @Autowired
     private SkierRepository skierRepository;
 
-    @Autowired
-    private StatisticsRepository statisticsRepository;
+    // @Autowired
+    // private StatisticsRepository statisticsRepository;
 
     public UpicDbHelper() {}
 
@@ -89,6 +89,10 @@ public class UpicDbHelper {
         this.skierRepository.save(skierEntity);
     }
 
+    public Iterable<LiftRideEntity> findAllLiftRides() {
+        return this.liftRideRepository.findAll();
+    }
+
     public LiftRideEntity findLiftRideById(Integer liftRideId) {
         Optional<LiftRideEntity> liftRideEntityResult = this.liftRideRepository.findById(liftRideId);
         LiftRideEntity liftRideEntity = liftRideEntityResult.isPresent() ? liftRideEntityResult.get() : null;
@@ -118,21 +122,21 @@ public class UpicDbHelper {
         return liftRideEntity;
     }
 
-    public synchronized void saveLiftRideEntity(LiftRideEntity liftRideEntity) {
-        this.liftRideRepository.save(liftRideEntity);
+    public synchronized LiftRideEntity saveLiftRideEntity(LiftRideEntity liftRideEntity) {
+        return this.liftRideRepository.save(liftRideEntity);
     }
 
     public ArrayList<ResortEntity> findAllResorts() {
         return (ArrayList<ResortEntity>) this.resortRepository.findAll();
     }
 
-    public ArrayList<StatisticsEntity> findAllStatistics(){
-        return (ArrayList<StatisticsEntity>) this.statisticsRepository.findAll();
-    }
+    // public ArrayList<StatisticsEntity> findAllStatistics(){
+    //     return (ArrayList<StatisticsEntity>) this.statisticsRepository.findAll();
+    // }
 
-    public StatisticsEntity findStatisticsByURLAndOperation(String URL, String operation){
-        return this.statisticsRepository.findByURLAndOperation(URL, operation);
-    }
+    // public StatisticsEntity findStatisticsByURLAndOperation(String URL, String operation){
+    //     return this.statisticsRepository.findByURLAndOperation(URL, operation);
+    // }
 
     public StatisticsEntity createStatisticsEntity(float maxLatency, float averageLatency, int totalNumRequests, String URL, String operation) {
         StatisticsEntity newStat = new StatisticsEntity();
@@ -145,7 +149,7 @@ public class UpicDbHelper {
         return newStat;
     }
 
-    public void saveStatistics(StatisticsEntity stats){
-        this.statisticsRepository.save(stats);
-    }
+    // public void saveStatistics(StatisticsEntity stats){
+    //     this.statisticsRepository.save(stats);
+    // }
 }

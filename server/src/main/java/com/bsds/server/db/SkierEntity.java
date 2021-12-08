@@ -14,4 +14,8 @@ public class SkierEntity {
     public void setSkierID(Integer skierID) {
         this.skierID = skierID;
     }
+
+    public Integer getSkierID() {
+        return this.skierID;
+    }
 }

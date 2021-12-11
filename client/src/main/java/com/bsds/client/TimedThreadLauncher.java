@@ -1,3 +1,5 @@
+package com.bsds.client;
+
 import java.util.concurrent.CyclicBarrier;
 
 public class TimedThreadLauncher {
@@ -30,7 +32,7 @@ public class TimedThreadLauncher {
         for (int i = 0; i < numThreads; i++){
             int threadIDStart = i * (numSkiers / numThreads) + 1;
             int threadIDEnd = (i + 1) * (numSkiers / numThreads);
-            new TimedSkierThread(hostname, port, skierIDStart, threadIDStart, threadIDEnd,
+            new TimedSkierThread(hostname, port, skierIDStart, skierIDEnd, startTime,
              endTime, numSkiLifts, doneBarrier).start();
         }
     }

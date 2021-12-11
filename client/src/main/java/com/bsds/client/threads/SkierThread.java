@@ -62,7 +62,7 @@ public class SkierThread extends Thread {
                 // random lift 
                 // int randomLift = ThreadLocalRandom.current().nextInt(1,
                 //     numSkiLifts + 1);
-                UpicHttpClient.postWriteLiftRide(url, randomTime, liftID); // Make POST request
+                // UpicHttpClient.postWriteLiftRide(url, randomTime, liftID); // Make POST request
                 UpicHttpClient.getVerticalForSkiDay(url);
             } catch (Exception e) {
                 e.printStackTrace();

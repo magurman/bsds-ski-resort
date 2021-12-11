@@ -3,6 +3,9 @@ package com.bsds.client;
 public class LatencyHistogram {
     static long[] histogram = new long[500];
     static int over_5s = 0;
+    static int numRequests;
+    static long mean = 0;
+
     
 
     public static synchronized void update(long latency){
@@ -11,9 +14,16 @@ public class LatencyHistogram {
         } else {
             histogram[(int) latency/10]++;
         }
+
+        long totalLatency = mean * numRequests;
+        mean = (totalLatency + latency) / (++numRequests);
     }
 
     public static long[] readHistogram(){
         return histogram.clone();
+    }
+
+    public static long getMean() {
+        return mean;
     }
 }

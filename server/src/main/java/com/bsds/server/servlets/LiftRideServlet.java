@@ -24,12 +24,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 @RestController
 public class LiftRideServlet {
     private static final String PATH_PREFIX = "/liftrides";
+
+    // private static final Logger logger = LogManager.getLogger(LiftRideServlet.class);
+    private static final Logger latencyLogger = LogManager.getLogger("LATENCY");
 
     // gson converts pojo to json string
     private Gson gson = new Gson();
@@ -40,6 +48,8 @@ public class LiftRideServlet {
     @PostMapping(value = PATH_PREFIX)
     public void postLiftRide(HttpServletRequest req, HttpServletResponse res) throws IOException {
         
+        long start = System.currentTimeMillis();
+
         String reqBody;
         try {
             reqBody = ServletUtils.getRequestBody(req);
@@ -53,11 +63,10 @@ public class LiftRideServlet {
         ResortEntity rEntity = new ResortEntity();
         rEntity.setResortID(newLiftRide.resort);
         LiftEntity lEntity = new LiftEntity();
-        lEntity.setLiftID(newLiftRide.liftID);
+        lEntity.setLiftID(newLiftRide.lift);
         lEntity.setResort(rEntity);
         SkierEntity sEntity = new SkierEntity();
         sEntity.setSkierID(newLiftRide.skier);
-
 
         LiftRideEntity newLiftRideEntity = upicDbHelper.createLiftRideEntity(1, newLiftRide.time, "2021", lEntity, sEntity);
         LiftRideEntity returnEntity = upicDbHelper.saveLiftRideEntity(newLiftRideEntity);
@@ -70,6 +79,9 @@ public class LiftRideServlet {
         String responseBody = Json.createObjectBuilder().add("rides", jsonArrayBuilder.build()).build().toString();
 
         ServletUtils.formatHttpResponse(res, responseBody, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
+
+        long latency = System.currentTimeMillis() - start;
+        latencyLogger.info("Request latency (milliseconds): " + latency);
     }
 
     @GetMapping(value = PATH_PREFIX)
@@ -107,6 +119,23 @@ public class LiftRideServlet {
         }
 
         String responseBody = Json.createObjectBuilder().add("rides", jsonArrayBuilder.build()).build().toString();
+        ServletUtils.formatHttpResponse(res, responseBody, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
+    }
+
+    @GetMapping(value = PATH_PREFIX + "/{id}")
+    public void getLiftRideById(@PathVariable int id, HttpServletRequest req, HttpServletResponse res) throws IOException{
+
+        LiftRideEntity liftRide = upicDbHelper.findLiftRideById(id);
+
+        if (liftRide == null) {
+            String messageJson = gson.toJson(new ResponseMessage("no lift ride with id: " + id + " was found"));
+            ServletUtils.formatHttpResponse(res, messageJson, HttpStatus.NOT_FOUND.value(), MediaType.APPLICATION_JSON_VALUE, null);
+            return;
+        }
+
+        JsonObject liftRideJson = ServletUtils.formatLiftRideJson(liftRide, "/liftrides/");
+
+        String responseBody = liftRideJson.toString();
         ServletUtils.formatHttpResponse(res, responseBody, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
     }
 }

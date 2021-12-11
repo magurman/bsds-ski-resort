@@ -6,7 +6,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class TimedSkiersClient {
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
+public class TimedSkiersClient implements SkiersClient{
     private int numThreads;
     private int skierIDStart;
     private int skierIDEnd;
@@ -15,6 +18,8 @@ public class TimedSkiersClient {
     private final int port;
     private static boolean done = false;
     static CyclicBarrier doneBarrier;
+
+    private static final Logger logger = LogManager.getLogger(TimedSkiersClient.class);
 
     public TimedSkiersClient(int numThreads, int skierIDStart, int skierIDEnd, int numSkiLifts, String hostname,
             int port) {
@@ -27,7 +32,7 @@ public class TimedSkiersClient {
         TimedSkiersClient.doneBarrier = new CyclicBarrier(numThreads + 1);
     }
 
-    public void start() throws InterruptedException, BrokenBarrierException {
+    public void start() throws InterruptedException {
 
         TimedThreadLauncher launcher = new TimedThreadLauncher(numThreads, skierIDStart, skierIDEnd, numSkiLifts, hostname, port, 1, 420,
             TimedSkiersClient.doneBarrier);
@@ -40,7 +45,13 @@ public class TimedSkiersClient {
         };
         ScheduledExecutorService signalDoneExecutor = Executors.newScheduledThreadPool(1);
         signalDoneExecutor.schedule(signalDoneRunnable, 15, TimeUnit.MINUTES);
-        doneBarrier.await();
+        try {
+            doneBarrier.await();
+        } catch (BrokenBarrierException e) {
+            // TODO Auto-generated catch block
+            logger.error("Cyclic Barrier is broken. Could not await.");
+            e.printStackTrace();
+        }
     }
 
     public synchronized static void signalDone(){

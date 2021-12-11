@@ -70,7 +70,24 @@ public class UpicHttpClient {
     //     logResponse(responseCode);
     // }
 
-    public static void postLiftRide(String url, LiftRide liftRide) {
+    public static HttpResponse<String> getLiftRidesForSkier(String url) {
+        HttpRequest request = buildHttpRequest(url, null, HttpMethod.GET, null);
+
+        HttpResponse<String> response;
+        try {
+            response = UpicHttpClient.getInstance().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            // TODO Auto-generated catch block
+            logger.error("request failed.");
+            e.printStackTrace();
+            return null;
+        }
+
+        logResponse(response.statusCode());
+        return response;
+    }
+
+    public static HttpResponse<String> postLiftRide(String url, LiftRide liftRide) {
         String body = gson.toJson(liftRide);
 
         String encodedCredentials = UpicHttpClient.getEncodedCredentials();
@@ -88,11 +105,11 @@ public class UpicHttpClient {
             // TODO Auto-generated catch block
             logger.error("request failed.");
             e.printStackTrace();
-            return;
+            return null;
         }
-        int responseCode = response.statusCode();
 
-        logResponse(responseCode);
+        logResponse(response.statusCode());
+        return response;
     }
 
     public static String getEncodedCredentials(){
@@ -136,15 +153,17 @@ public class UpicHttpClient {
 
         Builder httpRequestBuilder = HttpRequest.newBuilder();
 
-        headers.forEach((k, v) -> httpRequestBuilder.header(k, v));
-
+        if (headers != null) {
+            headers.forEach((k, v) -> httpRequestBuilder.header(k, v));
+        }
+        
         httpRequestBuilder.uri(URI.create(url));
 
         switch (httpMethod) {
             case DELETE:
                 break;
             case GET:
-                break;
+                httpRequestBuilder.GET();
             case HEAD:
                 break;
             case OPTIONS:

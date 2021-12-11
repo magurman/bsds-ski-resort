@@ -1,14 +1,22 @@
 package com.bsds.client;
 
+import java.net.http.HttpResponse;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import com.bsds.client.TimedSkiersClient;
 import com.bsds.client.http.UpicHttpClient;
 import com.bsds.client.model.LiftRide;
+import com.google.gson.Gson;
 
 import org.apache.logging.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.apache.logging.log4j.LogManager;
 
 
@@ -55,9 +63,20 @@ public class TimedSkierThread extends Thread {
                 long start_time = System.currentTimeMillis();
                 // UpicHttpClient.postWriteLiftRide(url, randomTime, liftID); // Make POST request
 
-                UpicHttpClient.postLiftRide(url, new LiftRide(randomTime, liftID, currentSkierID, resortID));
+                HttpResponse<String> postResp = UpicHttpClient.postLiftRide(url, new LiftRide(randomTime, liftID, currentSkierID, resortID));
+                LatencyHistogram.updatePost(System.currentTimeMillis() - start_time);
 
-                LatencyHistogram.update(System.currentTimeMillis() - start_time);
+                start_time = System.currentTimeMillis();
+                JSONParser parser = new JSONParser();
+                JSONObject json = (JSONObject) parser.parse(postResp.body());
+                JSONArray rides = (JSONArray) json.get("rides");
+                JSONObject ride = (JSONObject) rides.get(0);
+                String path = (String) ride.get("url");
+                String getUrl = this.buildUrl(path);
+                
+                HttpResponse<String> getResp = UpicHttpClient.getLiftRidesForSkier(getUrl);              
+                LatencyHistogram.updateGet(System.currentTimeMillis() - start_time);
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -81,7 +81,7 @@ public class LiftRideServlet {
         ServletUtils.formatHttpResponse(res, responseBody, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
 
         long latency = System.currentTimeMillis() - start;
-        latencyLogger.info("Request latency (milliseconds): " + latency);
+        latencyLogger.info("Request <latency:httpMethod> -- <" + latency + ":" + req.getMethod() + ">");
     }
 
     @GetMapping(value = PATH_PREFIX)

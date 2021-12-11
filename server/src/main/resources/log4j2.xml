@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorInterval="300">
+	<Appenders>
+		<Console name="FILE" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d [%t] %c %M - %p: %m%n" />
+        </Console>
+		<RollingFile name="ROLFILE" 
+		             fileName="server/logs/bsds-server.log"
+					 append="true"
+					 filePattern="server/logs/bsds-server-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout>
+				<Pattern>%d{ISO8601}{UTC} [%t] %c %M - %p: %m%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="1 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="5" />
+		</RollingFile>
+        <RollingFile name="LATENCY" 
+		             fileName="server/logs/bsds-server-latency.log"
+					 append="true"
+                     filePattern="logs/bsds-server-latency%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout>
+				<Pattern>%d{ISO8601}{UTC} [%t] %c %M - %p: %m%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="1 MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="5" />
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Root level="INFO">
+			<AppenderRef ref="ROLFILE" />
+  		</Root>
+        <Logger name="LATENCY" level="INFO" additivity="false">
+            <AppenderRef ref="LATENCY"/>
+        </Logger>
+  	</Loggers>
+</Configuration>

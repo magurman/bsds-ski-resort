@@ -1,29 +1,51 @@
 package com.bsds.client;
 
 public class LatencyHistogram {
-    static long[] histogram = new long[500];
-    static int over_5s = 0;
-    static int numRequests;
-    static long mean = 0;
+    static long[] histogramPost = new long[500];
+    static int over_5s_Post = 0;
+    static int numRequestsPost = 0;
+    static long meanPost = 0;
 
-    
+    static long[] histogramGet = new long[500];
+    static int over_5s_Get = 0;
+    static int mumRequestsGet = 0;
+    static long meanGet = 0;
 
-    public static synchronized void update(long latency){
+    public static synchronized void updatePost(long latency){
         if(latency >= 5000){
-            over_5s++;
+            over_5s_Post++;
         } else {
-            histogram[(int) latency/10]++;
+            histogramPost[(int) latency/10]++;
         }
 
-        long totalLatency = mean * numRequests;
-        mean = (totalLatency + latency) / (++numRequests);
+        long totalLatency = meanPost * numRequestsPost;
+        meanPost = (totalLatency + latency) / (++numRequestsPost);
     }
 
-    public static long[] readHistogram(){
-        return histogram.clone();
+    public static long[] readPostHistogram(){
+        return histogramPost.clone();
     }
 
-    public static long getMean() {
-        return mean;
+    public static long getMeanPost() {
+        return meanPost;
+    }
+
+    public static synchronized void updateGet(long latency){
+        if(latency >= 5000){
+            over_5s_Get++;
+        } else {
+            histogramGet[(int) latency/10]++;
+        }
+
+        long totalLatency = meanGet * mumRequestsGet;
+        meanGet = (totalLatency + latency) / (++mumRequestsGet);
+    }
+
+    public static long[] readGetHistogram(){
+        return histogramGet.clone();
+    }
+
+    public static long getMeanGet() {
+        return meanGet;
     }
 }

@@ -4,8 +4,12 @@ import com.bsds.client.http.HttpCounter;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.integration.IntegrationProperties.RSocket.Client;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 @SpringBootApplication
 public class ClientApplication {
@@ -18,21 +22,32 @@ public class ClientApplication {
 	private static final int DEFAULT_NUM_RUNS = 10;
 	private static final int MAX_NUM_RUNS = 20;
 
+	private static ConfigurableApplicationContext CTX;
+
+	private static final Logger logger = LogManager.getLogger(TimedSkiersClient.class);
+
+
 	public static void main(String[] args) throws InterruptedException {
 
 		ConfigurableApplicationContext ctx = 
            SpringApplication.run(ClientApplication.class, args);
-		
-		runClient(ctx.getEnvironment());
+		   ClientApplication.CTX = ctx;
+		runClient();
 	}
 
-	private static void runClient(Environment env) {
+	public static String getEnvProperty(String properyName) {
+		return ClientApplication.CTX.getEnvironment().getProperty(properyName);
+	}
 
-		String domain = env.getProperty("server.domain"); 
-		int port = Integer.parseInt(env.getProperty("port"));
+	private static void runClient() {
+
+		Environment env = ClientApplication.CTX.getEnvironment();
+
+		String domain = getEnvProperty("server.domain");
+		int port = Integer.parseInt(getEnvProperty("port"));
 
 		int numRuns;
-		String numRunsProperty = env.getProperty("client.numRuns");
+		String numRunsProperty = getEnvProperty("client.numRuns");
 		if (numRunsProperty == null) {
 			numRuns = DEFAULT_NUM_RUNS;
 		} else {
@@ -43,7 +58,7 @@ public class ClientApplication {
 		}
 
 		int numLifts;
-		String numLiftsProperty = env.getProperty("client.numLifts");
+		String numLiftsProperty = getEnvProperty("client.numLifts");
 		if (numLiftsProperty == null) {
 			numLifts = DEFAULT_NUM_LIFTS;
 		} else {
@@ -55,25 +70,38 @@ public class ClientApplication {
 			}
 		}
 
-		int numSkiers = Integer.parseInt(env.getProperty("client.numSkiers"));
+		int numSkiers = Integer.parseInt(getEnvProperty("client.numSkiers"));
 		if (numSkiers > MAX_NUM_SKIERS) {
 			throw new IllegalArgumentException("numSkiers greater than max number of skiers (" + MAX_NUM_SKIERS + ")!");
 		}
 
-		int numThreads = Integer.parseInt(env.getProperty("client.numThreads"));
+		int numThreads = Integer.parseInt(getEnvProperty("client.numThreads"));
 		if (numThreads > MAX_NUM_THREADS) {
 			throw new IllegalArgumentException("numThreads greater than max number of threads (" + MAX_NUM_THREADS + ")!");
 		}
 
-		PhasedSkiersClient client = new PhasedSkiersClient(numThreads, 1,
+		String clientType = getEnvProperty("client.type");
+
+		SkiersClient client;
+		if (clientType.equals("phased")) {
+			client = new PhasedSkiersClient(numThreads, 1,
 				numSkiers, numLifts, numRuns, domain, port);
+		} else if (clientType.equals("timed")) {
+			client = new TimedSkiersClient(numThreads, 1, numSkiers, numLifts, domain, port);
+		} else {
+			client = null;
+		}
 
 		long begTimeStamp = System.currentTimeMillis();
 		try {
 			client.start();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		} catch (NullPointerException e) {
+			logger.error("Incorrect client type specified in environment context");
+			return;
 		}
+		
 		long endTimeStamp = System.currentTimeMillis();
 
 		System.out.println("Wall time: " + (float) (endTimeStamp - begTimeStamp) / 1000 + " seconds");

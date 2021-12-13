@@ -19,7 +19,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 
 import java.net.http.HttpRequest;
-
+import com.bsds.client.ThroughputStatistics;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.plugins.validation.constraints.ValidPort;
 import org.apache.logging.log4j.LogManager;
@@ -107,7 +107,7 @@ public class UpicHttpClient {
             e.printStackTrace();
             return null;
         }
-
+        ThroughputStatistics.incrementRequest();
         logResponse(response.statusCode());
         return response;
     }
@@ -125,6 +125,7 @@ public class UpicHttpClient {
         HttpResponse<String> response = UpicHttpClient.getInstance().send(getRequest, HttpResponse.BodyHandlers.ofString());
         int responseCode = response.statusCode();
 
+        ThroughputStatistics.incrementRequest();
         logResponse(responseCode);
     }
 

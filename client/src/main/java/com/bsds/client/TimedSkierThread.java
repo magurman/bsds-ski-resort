@@ -5,9 +5,6 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-
 import com.bsds.client.TimedSkiersClient;
 import com.bsds.client.http.UpicHttpClient;
 import com.bsds.client.model.LiftRide;
@@ -41,6 +38,7 @@ public class TimedSkierThread extends Thread {
             this.startTime = startTime;
             this.endTime = endTime;
             this.numSkiLifts = numSkiLifts;
+            this.doneBarrier = doneBarrier;
     }
 
     @Override
@@ -55,7 +53,7 @@ public class TimedSkierThread extends Thread {
                 //     +  "/skiers/" + resortID + "/seasons/2021/days/"
                 //     + 1 + "/skiers/" + currentSkierID;
 
-                String url = this.buildUrl("/liftrides");
+                String url = this.buildUrl("/upic-server/liftrides");
                 // random time from range for phase
                 int randomTime = ThreadLocalRandom.current().nextInt(startTime,
                     endTime + 1);
@@ -72,7 +70,7 @@ public class TimedSkierThread extends Thread {
                 JSONArray rides = (JSONArray) json.get("rides");
                 JSONObject ride = (JSONObject) rides.get(0);
                 String path = (String) ride.get("url");
-                String getUrl = this.buildUrl(path);
+                String getUrl = this.buildUrl("/upic-server" + path);
                 
                 HttpResponse<String> getResp = UpicHttpClient.getLiftRidesForSkier(getUrl);              
                 LatencyHistogram.updateGet(System.currentTimeMillis() - start_time);

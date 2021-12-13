@@ -1,5 +1,9 @@
 package com.bsds.client;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 import com.bsds.client.http.HttpCounter;
 
 import org.springframework.boot.SpringApplication;
@@ -107,5 +111,15 @@ public class ClientApplication {
 		System.out.println("Wall time: " + (float) (endTimeStamp - begTimeStamp) / 1000 + " seconds");
 		System.out.println("Num Succ Requests: " + HttpCounter.getNumSuccessful());
 		System.out.println("Num Failed Requests: " + HttpCounter.getNumFailed());
+
+		try {
+			ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("getLatency.csv"));
+			outputStream.writeObject(LatencyHistogram.histogramGet);
+			outputStream.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.exit(0);
 	}
 }

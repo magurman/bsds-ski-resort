@@ -4,6 +4,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.Logger;
@@ -43,8 +44,19 @@ public class TimedSkiersClient implements SkiersClient{
                 TimedSkiersClient.signalDone();
             }
         };
+
+
+        final Runnable updateThroughputRunnable = new Runnable(){
+            public void run(){
+                ThroughputStatistics.updateThroughput();
+            }
+        };
+
         ScheduledExecutorService signalDoneExecutor = Executors.newScheduledThreadPool(1);
-        signalDoneExecutor.schedule(signalDoneRunnable, 15, TimeUnit.MINUTES);
+        signalDoneExecutor.schedule(signalDoneRunnable, 20, TimeUnit.SECONDS);
+
+        ScheduledExecutorService updateThroughputExecutor = Executors.newScheduledThreadPool(1);
+        ScheduledFuture futures = updateThroughputExecutor.scheduleAtFixedRate(updateThroughputRunnable, 0, 5, TimeUnit.SECONDS);
         try {
             doneBarrier.await();
         } catch (BrokenBarrierException e) {
@@ -52,6 +64,7 @@ public class TimedSkiersClient implements SkiersClient{
             logger.error("Cyclic Barrier is broken. Could not await.");
             e.printStackTrace();
         }
+        futures.cancel(true);
     }
 
     public synchronized static void signalDone(){

@@ -1,8 +1,12 @@
 package com.bsds.client;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 
 import com.bsds.client.http.HttpCounter;
 
@@ -112,14 +116,45 @@ public class ClientApplication {
 		System.out.println("Num Succ Requests: " + HttpCounter.getNumSuccessful());
 		System.out.println("Num Failed Requests: " + HttpCounter.getNumFailed());
 
-		try {
-			ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("getLatency.csv"));
-			outputStream.writeObject(LatencyHistogram.histogramGet);
-			outputStream.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		ClientApplication.writeLatencyStatsToFile("getLatency.csv", LatencyHistogram.histogramGet);
+		ClientApplication.writeLatencyStatsToFile("postLatency.csv", LatencyHistogram.histogramPost);
+		ClientApplication.writeThroughputStatsToFile("throughput5s.csv", ThroughputStatistics.getStats());
 		System.exit(0);
+	}
+
+	private static void writeLatencyStatsToFile(String filename, long[] data){
+		File latencyRecord = new File(filename);
+		try{
+			FileOutputStream fos = new FileOutputStream(latencyRecord);
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+			bw.write("Latency (ms), Count");
+			bw.newLine();
+			for(int i=0; i < data.length; i++){
+				String line = String.format("%d, %d", i*10, data[i]);
+				bw.write(line);
+				bw.newLine();
+			}
+			bw.close();
+		} catch (Exception e){
+			System.out.println("Exception while writing stats:" + e.getMessage());
+		}
+	}
+
+	private static void writeThroughputStatsToFile(String filename, ArrayList<Integer> data){
+		File latencyRecord = new File(filename);
+		try{
+			FileOutputStream fos = new FileOutputStream(latencyRecord);
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+			bw.write("Time Interval End, Num Requests");
+			bw.newLine();
+			for(int i=0; i < data.size(); i++){
+				String line = String.format("%d, %d", i*5, data.get(i));
+				bw.write(line);
+				bw.newLine();
+			}
+			bw.close();
+		} catch (Exception e){
+			System.out.println("Exception while writing stats:" + e.getMessage());
+		}
 	}
 }

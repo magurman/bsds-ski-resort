@@ -82,7 +82,7 @@ public class UpicHttpClient {
             e.printStackTrace();
             return null;
         }
-
+        ThroughputStatistics.incrementRequest();
         logResponse(response.statusCode());
         return response;
     }
@@ -125,7 +125,6 @@ public class UpicHttpClient {
         HttpResponse<String> response = UpicHttpClient.getInstance().send(getRequest, HttpResponse.BodyHandlers.ofString());
         int responseCode = response.statusCode();
 
-        ThroughputStatistics.incrementRequest();
         logResponse(responseCode);
     }
 

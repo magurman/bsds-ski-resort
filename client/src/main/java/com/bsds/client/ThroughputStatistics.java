@@ -15,5 +15,9 @@ public class ThroughputStatistics {
     throughputs.add(numReq);
     numReq = 0;
   }
+
+  public static ArrayList<Integer> getStats() {
+    return throughputs;
+  }
   
 }

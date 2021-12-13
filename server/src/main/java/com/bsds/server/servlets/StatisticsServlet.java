@@ -29,9 +29,9 @@ public class StatisticsServlet {
     @GetMapping("/statistics")
     public void getStatistics(HttpServletRequest req, HttpServletResponse res) throws IOException {
 
-        ArrayList<StatisticsEntity> stats = upicDbHelper.findAllStatistics();
-        String statsList = gson.toJson(stats);
+        // ArrayList<StatisticsEntity> stats = upicDbHelper.findAllStatistics();
+        // String statsList = gson.toJson(stats);
 
-        ServletUtils.formatHttpResponse(res, statsList, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
+        // ServletUtils.formatHttpResponse(res, statsList, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
     }   
 }

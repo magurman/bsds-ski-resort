@@ -114,7 +114,7 @@ public class SkierServlet {
         ResortEntity rEntity = new ResortEntity();
         rEntity.setResortID(resortID);
         LiftEntity lEntity = new LiftEntity();
-        lEntity.setLiftID(liftRide.liftID);
+        lEntity.setLiftID(liftRide.lift);
         lEntity.setResort(rEntity);
         SkierEntity sEntity = new SkierEntity();
         sEntity.setSkierID(skierID);
@@ -124,8 +124,8 @@ public class SkierServlet {
 
         ServletUtils.formatHttpResponse(res, null, HttpStatus.CREATED.value(), null, null);
 
-        long latency = System.currentTimeMillis() - startTime;
-        this.updateStatistics(latency, HttpMethod.POST.name(), "/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
+        // long latency = System.currentTimeMillis() - startTime;
+        // this.updateStatistics(latency, HttpMethod.POST.name(), "/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
     
     }
 
@@ -159,8 +159,8 @@ public class SkierServlet {
 
         ServletUtils.formatHttpResponse(res, Integer.toString(total_vertical_distance), HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
 
-        long latency = System.currentTimeMillis() - startTime;
-        this.updateStatistics(latency, HttpMethod.GET.name(), "/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
+        // long latency = System.currentTimeMillis() - startTime;
+        // this.updateStatistics(latency, HttpMethod.GET.name(), "/skiers/{resortID}/seasons/{seasonID}/days/{dayID}/skiers/{skierID}");
 
     }
 
@@ -227,28 +227,28 @@ public class SkierServlet {
      * @param operation
      * @param url
      */
-    private synchronized void updateStatistics(float latency, String operation, String url) {
-        StatisticsEntity currentStatistics = upicDbHelper.findStatisticsByURLAndOperation(url, operation); // get statistics for this url and http operation
+    // private synchronized void updateStatistics(float latency, String operation, String url) {
+    //     StatisticsEntity currentStatistics = upicDbHelper.findStatisticsByURLAndOperation(url, operation); // get statistics for this url and http operation
         
-        if(currentStatistics != null){ // update existing entry
-            float currentAverageLatency = currentStatistics.getAverageLatency();
-            int currentTotalNumRequests = currentStatistics.getTotalNumRequests();
-            float currentMaximumLatency = currentStatistics.getMaxLatency();
+    //     if(currentStatistics != null){ // update existing entry
+    //         float currentAverageLatency = currentStatistics.getAverageLatency();
+    //         int currentTotalNumRequests = currentStatistics.getTotalNumRequests();
+    //         float currentMaximumLatency = currentStatistics.getMaxLatency();
 
-            if(latency > currentMaximumLatency){
-                currentStatistics.setMaxLatency(latency);
-            }
+    //         if(latency > currentMaximumLatency){
+    //             currentStatistics.setMaxLatency(latency);
+    //         }
 
-            float newAverageLatency = (currentAverageLatency * currentTotalNumRequests + latency)/ ((float) currentTotalNumRequests + 1);
-            currentStatistics.setAverageLatency(newAverageLatency);
-            currentStatistics.setTotalNumRequests(++currentTotalNumRequests);
+    //         float newAverageLatency = (currentAverageLatency * currentTotalNumRequests + latency)/ ((float) currentTotalNumRequests + 1);
+    //         currentStatistics.setAverageLatency(newAverageLatency);
+    //         currentStatistics.setTotalNumRequests(++currentTotalNumRequests);
 
-            upicDbHelper.saveStatistics(currentStatistics);
-        } else { // create new statistics 
-            StatisticsEntity newStat = upicDbHelper.createStatisticsEntity(latency, latency, 1, url, operation);
-            upicDbHelper.saveStatistics(newStat);
-        }
-    }
+    //         upicDbHelper.saveStatistics(currentStatistics);
+    //     } else { // create new statistics 
+    //         StatisticsEntity newStat = upicDbHelper.createStatisticsEntity(latency, latency, 1, url, operation);
+    //         upicDbHelper.saveStatistics(newStat);
+    //     }
+    // }
 
     /**
      * Private method to validate a dayID. Day IDs must be between 1 and 366

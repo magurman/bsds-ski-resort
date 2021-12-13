@@ -4,11 +4,15 @@ package com.bsds.client.model;
  * POJO for a LiftRide at Upic Ski Resort
  */
 public class LiftRide {
-    private int time;
-    private int liftID;
+    public int time;
+    public int lift;
+    public int skier;
+    public int resort;
 
-    public LiftRide(int time, int liftID) {
+    public LiftRide(int time, int lift, int skier, int resort) {
         this.time = time;
-        this.liftID = liftID;
+        this.lift = lift;
+        this.skier = skier;
+        this.resort = resort;
     }
 }

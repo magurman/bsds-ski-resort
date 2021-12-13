@@ -80,8 +80,7 @@ public class LiftRideServlet {
 
         ServletUtils.formatHttpResponse(res, responseBody, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
 
-        long latency = System.currentTimeMillis() - start;
-        latencyLogger.info("Request latency (milliseconds): " + latency);
+        latencyLogger.info("Request <latency:httpMethod> -- <" + (System.currentTimeMillis() - start) + ":" + req.getMethod() + ">");
     }
 
     @GetMapping(value = PATH_PREFIX)
@@ -125,6 +124,8 @@ public class LiftRideServlet {
     @GetMapping(value = PATH_PREFIX + "/{id}")
     public void getLiftRideById(@PathVariable int id, HttpServletRequest req, HttpServletResponse res) throws IOException{
 
+        long start = System.currentTimeMillis();
+
         LiftRideEntity liftRide = upicDbHelper.findLiftRideById(id);
 
         if (liftRide == null) {
@@ -137,5 +138,7 @@ public class LiftRideServlet {
 
         String responseBody = liftRideJson.toString();
         ServletUtils.formatHttpResponse(res, responseBody, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
+        
+        latencyLogger.info("Request <latency:httpMethod> -- <" + (System.currentTimeMillis() - start) + ":" + req.getMethod() + ">");
     }
 }

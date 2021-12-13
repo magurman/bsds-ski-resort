@@ -9,7 +9,7 @@ import java.util.concurrent.CyclicBarrier;
  * This class currently launches three phases of sending requests to the server: startup, peak, and cooldown
  * 
  */
-public class PhasedSkiersClient {
+public class PhasedSkiersClient implements SkiersClient{
   private int numThreads;
   private int skierIDStart;
   private int skierIDEnd;

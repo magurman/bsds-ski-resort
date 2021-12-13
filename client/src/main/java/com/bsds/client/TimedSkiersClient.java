@@ -1,0 +1,65 @@
+package com.bsds.client;
+
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
+public class TimedSkiersClient implements SkiersClient{
+    private int numThreads;
+    private int skierIDStart;
+    private int skierIDEnd;
+    private int numSkiLifts;
+    private final String hostname;
+    private final int port;
+    private static boolean done = false;
+    static CyclicBarrier doneBarrier;
+
+    private static final Logger logger = LogManager.getLogger(TimedSkiersClient.class);
+
+    public TimedSkiersClient(int numThreads, int skierIDStart, int skierIDEnd, int numSkiLifts, String hostname,
+            int port) {
+        this.numThreads = numThreads;
+        this.skierIDStart = skierIDStart;
+        this.skierIDEnd = skierIDEnd;
+        this.numSkiLifts = numSkiLifts;
+        this.hostname = hostname;
+        this.port = port;
+        TimedSkiersClient.doneBarrier = new CyclicBarrier(numThreads + 1);
+    }
+
+    public void start() throws InterruptedException {
+
+        TimedThreadLauncher launcher = new TimedThreadLauncher(numThreads, skierIDStart, skierIDEnd, numSkiLifts, hostname, port, 1, 420,
+            TimedSkiersClient.doneBarrier);
+        launcher.launch();
+        
+        final Runnable signalDoneRunnable = new Runnable(){
+            public void run(){
+                TimedSkiersClient.signalDone();
+            }
+        };
+        ScheduledExecutorService signalDoneExecutor = Executors.newScheduledThreadPool(1);
+        signalDoneExecutor.schedule(signalDoneRunnable, 15, TimeUnit.MINUTES);
+        try {
+            doneBarrier.await();
+        } catch (BrokenBarrierException e) {
+            // TODO Auto-generated catch block
+            logger.error("Cyclic Barrier is broken. Could not await.");
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized static void signalDone(){
+        TimedSkiersClient.done = true;
+    }
+
+    public static boolean checkDone(){
+        return TimedSkiersClient.done;
+    }
+
+}

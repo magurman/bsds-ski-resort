@@ -21,6 +21,7 @@ import com.bsds.server.model.ResponseMessage;
 import com.google.gson.Gson;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -80,7 +81,7 @@ public class LiftRideServlet {
 
         ServletUtils.formatHttpResponse(res, responseBody, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
 
-        latencyLogger.info("Request <latency:httpMethod> -- <" + (System.currentTimeMillis() - start) + ":" + req.getMethod() + ">");
+        LatencyTracker.addLatency(System.currentTimeMillis() - start, HttpMethod.POST);
     }
 
     @GetMapping(value = PATH_PREFIX)
@@ -139,6 +140,6 @@ public class LiftRideServlet {
         String responseBody = liftRideJson.toString();
         ServletUtils.formatHttpResponse(res, responseBody, HttpStatus.OK.value(), MediaType.APPLICATION_JSON_VALUE, null);
         
-        latencyLogger.info("Request <latency:httpMethod> -- <" + (System.currentTimeMillis() - start) + ":" + req.getMethod() + ">");
+        LatencyTracker.addLatency(System.currentTimeMillis() - start, HttpMethod.GET);
     }
 }

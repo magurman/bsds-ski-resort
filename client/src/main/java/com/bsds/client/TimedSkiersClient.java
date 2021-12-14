@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 
 public class TimedSkiersClient implements SkiersClient{
     private int numThreads;
+    private int numMins;
     private int skierIDStart;
     private int skierIDEnd;
     private int numSkiLifts;
@@ -22,9 +23,10 @@ public class TimedSkiersClient implements SkiersClient{
 
     private static final Logger logger = LogManager.getLogger(TimedSkiersClient.class);
 
-    public TimedSkiersClient(int numThreads, int skierIDStart, int skierIDEnd, int numSkiLifts, String hostname,
+    public TimedSkiersClient(int numThreads, int numMins, int skierIDStart, int skierIDEnd, int numSkiLifts, String hostname,
             int port) {
         this.numThreads = numThreads;
+        this.numMins = numMins;
         this.skierIDStart = skierIDStart;
         this.skierIDEnd = skierIDEnd;
         this.numSkiLifts = numSkiLifts;
@@ -53,7 +55,7 @@ public class TimedSkiersClient implements SkiersClient{
         };
 
         ScheduledExecutorService signalDoneExecutor = Executors.newScheduledThreadPool(1);
-        signalDoneExecutor.schedule(signalDoneRunnable, 20, TimeUnit.SECONDS);
+        signalDoneExecutor.schedule(signalDoneRunnable, this.numMins, TimeUnit.MINUTES);
 
         ScheduledExecutorService updateThroughputExecutor = Executors.newScheduledThreadPool(1);
         ScheduledFuture futures = updateThroughputExecutor.scheduleAtFixedRate(updateThroughputRunnable, 0, 5, TimeUnit.SECONDS);

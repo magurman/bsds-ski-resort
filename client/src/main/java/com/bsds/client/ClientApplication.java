@@ -88,6 +88,8 @@ public class ClientApplication {
 			throw new IllegalArgumentException("numThreads greater than max number of threads (" + MAX_NUM_THREADS + ")!");
 		}
 
+		int numMins = Integer.parseInt(getEnvProperty("client.numMins"));
+
 		String clientType = getEnvProperty("client.type");
 
 		SkiersClient client;
@@ -95,7 +97,7 @@ public class ClientApplication {
 			client = new PhasedSkiersClient(numThreads, 1,
 				numSkiers, numLifts, numRuns, domain, port);
 		} else if (clientType.equals("timed")) {
-			client = new TimedSkiersClient(numThreads, 1, numSkiers, numLifts, domain, port);
+			client = new TimedSkiersClient(numThreads, numMins, 1, numSkiers, numLifts, domain, port);
 		} else {
 			client = null;
 		}
@@ -116,9 +118,13 @@ public class ClientApplication {
 		System.out.println("Num Succ Requests: " + HttpCounter.getNumSuccessful());
 		System.out.println("Num Failed Requests: " + HttpCounter.getNumFailed());
 
-		ClientApplication.writeLatencyStatsToFile("getLatency.csv", LatencyHistogram.histogramGet);
-		ClientApplication.writeLatencyStatsToFile("postLatency.csv", LatencyHistogram.histogramPost);
-		ClientApplication.writeThroughputStatsToFile("throughput5s.csv", ThroughputStatistics.getStats());
+		String getLatencyFilename = "getLatency-" + numThreads + ".csv";
+		String postLatencyFilename = "postLatency-" + numThreads + ".csv";
+		String throughputFilename = "throughput5s-" + numThreads + ".csv";
+
+		ClientApplication.writeLatencyStatsToFile(getLatencyFilename, LatencyHistogram.histogramGet);
+		ClientApplication.writeLatencyStatsToFile(postLatencyFilename, LatencyHistogram.histogramPost);
+		ClientApplication.writeThroughputStatsToFile(throughputFilename, ThroughputStatistics.getStats());
 		System.exit(0);
 	}
 
